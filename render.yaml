@@ -24,6 +24,20 @@ services:
         value: production
       - key: LOG_LEVEL
         value: info
+      # Public origin of this service. Makes the OpenAPI document at /docs and
+      # docs/openapi.yaml advertise absolute server URLs (code generators,
+      # Postman, other clients). Keep in sync with the Render-generated URL.
+      - key: PUBLIC_BASE_URL
+        value: https://cidb-tender-api.onrender.com
+      # Source of tender records: the machine-readable feed the CIDB website
+      # renders its public listing from. The listing page builds its table in the
+      # browser, so its served HTML has an empty <tbody> and scraping it finds
+      # zero records — the feed returns every row, with statuses and documents.
+      - key: CIDB_SOURCE_URL
+        value: https://www.cidb.org.za/tenders.json
+      # Public page ingested records are attributed to (the API's sourceUrl field).
+      - key: CIDB_LISTING_URL
+        value: https://www.cidb.org.za/cidb-tenders/current-tenders/
       # Neon DIRECT (non-pooler) connection string.
       - key: DATABASE_URL
         sync: false
@@ -33,4 +47,9 @@ services:
       # Admin secret — must differ from API_KEY. Also used by the external
       # scheduler to trigger syncs.
       - key: ADMIN_API_KEY
+        sync: false
+      # Browser origins allowed to call this API (comma-separated), e.g. the
+      # TenderBase web app. Server-to-server callers send no Origin header and
+      # are always allowed; leaving this empty blocks cross-origin browser use.
+      - key: CORS_ORIGIN
         sync: false

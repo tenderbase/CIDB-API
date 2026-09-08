@@ -1,0 +1,92 @@
+name: Probe the CIDB source
+
+# Diagnostic: asks the live feed the way the website does (page/limit/status/
+# region/search_item/cache-buster) and reports what actually changes, so a
+# "fewer tenders than the site shows" question can be answered with evidence
+# instead of guesswork. Runs from a GitHub runner because dev sandboxes often
+# cannot reach cidb.org.za.
+#
+# Trigger: push touching the probe, or Actions → "Probe the CIDB source" → Run.
+
+on:
+  push:
+    paths:
+      - 'scripts/probe-feed.ts'
+      - '.github/workflows/probe-source.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: probe-cidb-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    name: Ask the feed the way the website does
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write   # publishes the report to the branch below
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Probe the feed
+        env:
+          LOG_LEVEL: warn
+        shell: bash
+        run: |
+          set -o pipefail   # a failed probe must fail the step, not just tee
+          mkdir -p artifacts
+          npx tsx scripts/probe-feed.ts --out=artifacts/feed-probe.json | tee probe.log
+
+      - name: Job summary
+        if: always()
+        run: |
+          echo '### CIDB feed probe' >> "$GITHUB_STEP_SUMMARY"
+          echo '```text' >> "$GITHUB_STEP_SUMMARY"
+          cat probe.log >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || echo 'no probe output' >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+      # Artifact storage is not reachable from every dev environment, so commit
+      # the report to the branch — readable through plain git/GitHub.
+      - name: Publish the report to the branch
+        if: ${{ always() && github.event_name == 'push' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          stamp="$(date -u +%Y-%m-%dT%H%M%SZ)"
+          dir="snapshots/$stamp/feed-probe"
+          mkdir -p "$dir"
+          cp artifacts/feed-probe.json "$dir"/ 2>/dev/null || true
+          cp probe.log "$dir"/ 2>/dev/null || true
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$dir"
+          if git diff --cached --quiet; then
+            echo "Nothing to publish."
+          else
+            git commit -m "chore(probe): CIDB feed probe $stamp [skip ci]"
+            git push origin "HEAD:${GITHUB_REF#refs/heads/}"
+            echo "Published $dir"
+          fi
+
+      - name: Upload probe report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cidb-feed-probe
+          path: |
+            artifacts/feed-probe.json
+            probe.log
+          if-no-files-found: warn
+          retention-days: 30

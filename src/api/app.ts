@@ -12,7 +12,8 @@ import {
   ZodTypeProvider,
 } from 'fastify-type-provider-zod';
 import { z } from 'zod';
-import { config, corsOrigins } from '../config.js';
+import { apiServerUrl, config, corsOrigins, publicOrigin, rootServerUrl } from '../config.js';
+import { rateLimitedErrorSchema } from '../schemas/responses.js';
 import { logger } from '../utils/logging.js';
 import { registerAdminRoutes } from './routes/admin.js';
 import { registerDocumentRoutes } from './routes/documents.js';
@@ -22,6 +23,16 @@ import { registerTenderRoutes } from './routes/tenders.js';
 
 export function errorEnvelope(code: string, message: string) {
   return { error: { code, message } };
+}
+
+/** OpenAPI `servers` for the versioned API (see PUBLIC_BASE_URL in config.ts). */
+export function apiServers(): Array<{ url: string; description: string }> {
+  const origin = publicOrigin();
+  if (!origin) return [{ url: apiServerUrl(), description: 'CIDB Tender API v1 (this origin)' }];
+  return [
+    { url: apiServerUrl(), description: 'CIDB Tender API v1 (public deployment)' },
+    { url: '/api/v1', description: 'CIDB Tender API v1 (this origin)' },
+  ];
 }
 
 export async function buildApp() {
@@ -62,10 +73,30 @@ export async function buildApp() {
         version: '1.0.0',
         description:
           'Standalone normalized API over publicly available CIDB tender information. ' +
-          'Authenticate with the `X-API-Key` header. Source: Construction Industry Development Board (CIDB).',
+          'Source: Construction Industry Development Board (CIDB).\n\n' +
+          '### Authentication\n\n' +
+          'Every endpoint except `GET /health` and `GET /` needs an API key: click **Authorize** and paste the ' +
+          'key value (the `X-API-Key` header is added automatically). Read endpoints accept any active key; ' +
+          '`/admin/*` and `/health/detailed` need an **ADMIN**-role key.\n\n' +
+          '### Errors\n\n' +
+          'All failures use one envelope: `{ "error": { "code": "...", "message": "..." } }` — ' +
+          '`400` invalid request, `401` missing/invalid key, `403` admin key required, `404` not found, ' +
+          '`409` sync already running, `429` rate limited, `500`/`503` service fault.\n\n' +
+          '### Rate limits\n\n' +
+          `Global: ${config.RATE_LIMIT_MAX} requests per ${Math.round(config.RATE_LIMIT_WINDOW_MS / 1000)}s. ` +
+          `Admin routes: ${config.ADMIN_RATE_LIMIT_MAX} per ${Math.round(config.ADMIN_RATE_LIMIT_WINDOW_MS / 1000)}s.`,
       },
-      servers: [{ url: '/api/v1', description: 'Current server (v1)' }],
+      // PUBLIC_BASE_URL configured (production) → advertise the absolute origin
+      // first (what code generators and external clients need) plus the relative
+      // one, so "Try it out" keeps working when browsing the docs on any origin.
+      // Unset (local dev, tests) → relative only.
+      servers: apiServers(),
+      externalDocs: {
+        url: 'https://github.com/tenderbase/CIDB-API',
+        description: 'Repository, ingestion pipeline and deployment notes',
+      },
       tags: [
+        { name: 'meta', description: 'Service metadata (no API key required)' },
         { name: 'health', description: 'Service health and status' },
         { name: 'tenders', description: 'Tender search, filter and detail' },
         { name: 'documents', description: 'Tender documents' },
@@ -74,13 +105,29 @@ export async function buildApp() {
       ],
       components: {
         securitySchemes: {
-          apiKey: { type: 'apiKey', name: 'X-API-Key', in: 'header', description: 'API key issued for this service' },
+          apiKey: {
+            type: 'apiKey',
+            name: 'X-API-Key',
+            in: 'header',
+            description:
+              'API key issued for this service. Read endpoints accept any active key; ' +
+              'admin endpoints require an ADMIN-role key.',
+          },
         },
       },
     },
     transform: jsonSchemaTransform,
   });
-  await app.register(swaggerUi, { routePrefix: '/docs' });
+  await app.register(swaggerUi, {
+    routePrefix: '/docs',
+    uiConfig: {
+      // Keep the X-API-Key across reloads and show a readable, compact UI.
+      persistAuthorization: true,
+      docExpansion: 'list',
+      displayRequestDuration: true,
+      defaultModelsExpandDepth: 0,
+    },
+  });
 
   // Consistent error envelope for every failure mode.
   app.setErrorHandler((error, request, reply) => {
@@ -140,12 +187,24 @@ export async function buildApp() {
     '/',
     {
       schema: {
-        description: 'Service index with links to documentation and health.',
-        response: { 200: rootResponseSchema },
+        tags: ['meta'],
+        summary: 'Service index',
+        operationId: 'getServiceIndex',
+        description:
+          'Public service index with links to the documentation, OpenAPI spec and health probe. ' +
+          'No API key required.',
+        // The document-wide server is `/api/v1`, so this root-level route needs
+        // its own server entry — otherwise "Try it out" in Swagger UI would call
+        // `/api/v1/` and get a 404.
+        servers: [{ url: rootServerUrl(), description: 'Service root' }],
+        response: {
+          200: rootResponseSchema.describe('Service name, version and links to docs, health and the API.'),
+          429: rateLimitedErrorSchema,
+        },
       },
     },
     async () => ({
-      service: 'cidb-tender-api',
+      service: config.SERVICE_NAME,
       version: '1.0.0',
       description: 'Standalone normalized API over publicly available CIDB tender information.',
       docs: '/docs',

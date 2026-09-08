@@ -4,7 +4,14 @@ import { requireAdminKey } from '../../auth/apiKey.js';
 import { createConnector } from '../../cidb/factory.js';
 import { config } from '../../config.js';
 import { checkDatabase, prisma } from '../../database/client.js';
-import { detailedHealthResponseSchema, errorSchema, healthResponseSchema } from '../../schemas/responses.js';
+import {
+  detailedHealthOkSchema,
+  forbiddenErrorSchema,
+  healthDegradedSchema,
+  healthOkSchema,
+  rateLimitedErrorSchema,
+  unauthorizedErrorSchema,
+} from '../../schemas/responses.js';
 
 export async function registerHealthRoutes(app: FastifyInstance): Promise<void> {
   const r = app.withTypeProvider<ZodTypeProvider>();
@@ -15,8 +22,12 @@ export async function registerHealthRoutes(app: FastifyInstance): Promise<void> 
     {
       schema: {
         tags: ['health'],
-        description: 'Public liveness probe. Returns 503 when the database is unreachable.',
-        response: { 200: healthResponseSchema, 503: healthResponseSchema },
+        summary: 'Liveness probe',
+        operationId: 'getHealth',
+        description:
+          'Public liveness probe — no API key required. This is the Render health check path. ' +
+          'Returns 503 when the database is unreachable.',
+        response: { 200: healthOkSchema, 503: healthDegradedSchema, 429: rateLimitedErrorSchema },
       },
     },
     async (_request, reply) => {
@@ -38,9 +49,18 @@ export async function registerHealthRoutes(app: FastifyInstance): Promise<void> 
       preHandler: [requireAdminKey],
       schema: {
         tags: ['health'],
-        description: 'Detailed service status. Requires an admin API key.',
+        summary: 'Detailed health',
+        operationId: 'getDetailedHealth',
+        description:
+          'Detailed service status: database latency, CIDB source reachability, last sync run and record counts. ' +
+          'Requires an ADMIN-role API key.',
         security: [{ apiKey: [] }],
-        response: { 200: detailedHealthResponseSchema, 401: errorSchema, 403: errorSchema },
+        response: {
+          200: detailedHealthOkSchema,
+          401: unauthorizedErrorSchema,
+          403: forbiddenErrorSchema,
+          429: rateLimitedErrorSchema,
+        },
       },
     },
     async () => {

@@ -1,0 +1,2587 @@
+{
+  "summary": {
+    "generatedAt": "2026-09-08T15:47:09.288Z",
+    "source": "https://www.cidb.org.za/tenders.json",
+    "sourceKind": "JSON feed",
+    "pagesFetched": 2,
+    "pages": [
+      {
+        "pageNumber": 1,
+        "url": "https://www.cidb.org.za/tenders.json?page=1&limit=100",
+        "rows": 25,
+        "bytes": 47772
+      },
+      {
+        "pageNumber": 2,
+        "url": "https://www.cidb.org.za/tenders.json?page=2&limit=100",
+        "rows": 25,
+        "bytes": 47772
+      }
+    ],
+    "rowsParsed": 25,
+    "tenders": 25,
+    "documents": 86,
+    "normalizeFailures": 0,
+    "byStatus": {
+      "AWARDED": 22,
+      "CLOSED": 2,
+      "OPEN": 1
+    },
+    "byProvince": {
+      "UNKNOWN": 15,
+      "Gauteng": 3,
+      "Free State": 2,
+      "Mpumalanga": 2,
+      "KwaZulu-Natal": 2,
+      "Eastern Cape": 1
+    },
+    "byGrade": {
+      "UNKNOWN": 24,
+      "7-9": 1
+    },
+    "byTenderType": {
+      "Services": 9,
+      "UNKNOWN": 7,
+      "Works": 5,
+      "Supply": 3,
+      "Consulting": 1
+    },
+    "publishedDates": {
+      "earliest": "2024-12-13T16:23:10.000Z",
+      "latest": "2026-06-01T17:35:25.000Z"
+    },
+    "closingDates": {
+      "known": 0,
+      "unknown": 25,
+      "earliest": null,
+      "latest": null
+    },
+    "warnings": [
+      "feed repeated page 2 with no new entries (paging parameters ignored?): 25 distinct records collected, tender_count declares 33",
+      "source declares 33 tenders but 25 were returned — raise --limit/--max-pages or check the feed's paging parameters"
+    ]
+  },
+  "tenders": [
+    {
+      "externalId": "CIDB-CIDB-004-2627",
+      "source": "CIDB",
+      "bidNumber": "CIDB 004 2627",
+      "title": "Appointment of a service provider for electrical infrastructure upgrade project: supply and install a 1250 KVA transformer, removal of existing transformer, DB rewiring, lighting and small power rectification, earthing…",
+      "description": "Appointment of a service provider for electrical infrastructure upgrade project: supply and install a 1250 KVA transformer, removal of existing transformer, DB rewiring, lighting and small power rectification, earthing & lightning protection upgrades with three-year maintenance services at the cidb head office in Centurion.\n\nClick here to download the Pricing Schedule.",
+      "organisation": "Construction Industry Development Board",
+      "tenderType": "Works",
+      "status": "AWARDED",
+      "province": "Gauteng",
+      "location": null,
+      "municipality": null,
+      "publishedDate": "2026-06-01T17:35:25.000Z",
+      "closingDate": null,
+      "briefingDate": null,
+      "briefingRequired": false,
+      "briefingLocation": null,
+      "cidbGrade": null,
+      "cidbGradeRaw": null,
+      "cidbClass": [],
+      "cidbClassRaw": null,
+      "estimatedValue": null,
+      "contact": {
+        "name": null,
+        "email": null,
+        "phone": null
+      },
+      "documents": [
+        {
+          "name": "GET BID DOCUMENT",
+          "documentType": "BID_DOCUMENT",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb-004-2627-tender-document-transformer-maintenance-tender.pdf",
+          "fileName": "cidb-004-2627-tender-document-transformer-maintenance-tender.pdf",
+          "mimeType": "application/pdf"
+        },
+        {
+          "name": "BID OPENING REGISTER",
+          "documentType": "OPENING_REGISTER",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb-004-26-27-bid-opening-register--supply-install-1250-kva-transformer-removal-of-existing-transformer.pdf",
+          "fileName": "cidb-004-26-27-bid-opening-register--supply-install-1250-kva-transformer-removal-of-existing-transformer.pdf",
+          "mimeType": "application/pdf"
+        },
+        {
+          "name": "Click here",
+          "documentType": "PRICING_SCHEDULE",
+          "url": "https://www.cidb.org.za/wp-content/uploads/2026/06/Annexure-B-Transformer-and-Electrical-Installations-Unpriced-BOQ.xlsx",
+          "fileName": "Annexure-B-Transformer-and-Electrical-Installations-Unpriced-BOQ.xlsx",
+          "mimeType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        }
+      ],
+      "sourceUrl": "https://www.cidb.org.za/cidb-tenders/current-tenders/",
+      "rawHash": "524bde5683907326c84c50d502dd15c3977ab114644ed0d8da44c762e9e1c4ed",
+      "rawData": {
+        "bidNumberRaw": " cidb 004 2627",
+        "dateRaw": "2026-06-01 17:35:25",
+        "descriptionRaw": "Appointment of a service provider for electrical infrastructure upgrade project: supply and install a 1250 KVA transformer, removal of existing transformer, DB rewiring, lighting and small power rectification, earthing & lightning protection upgrades with three-year maintenance services at the cidb head office in Centurion.\n\nClick here to download the Pricing Schedule.",
+        "sourceUrl": "https://www.cidb.org.za/cidb-tenders/current-tenders/",
+        "documentUrls": [
+          {
+            "label": "GET BID DOCUMENT",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb-004-2627-tender-document-transformer-maintenance-tender.pdf"
+          },
+          {
+            "label": "BID OPENING REGISTER",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb-004-26-27-bid-opening-register--supply-install-1250-kva-transformer-removal-of-existing-transformer.pdf"
+          },
+          {
+            "label": "Click here",
+            "url": "https://www.cidb.org.za/wp-content/uploads/2026/06/Annexure-B-Transformer-and-Electrical-Installations-Unpriced-BOQ.xlsx"
+          }
+        ],
+        "sourceStatus": "AWARDED",
+        "sourceStatusRaw": "Awarded",
+        "sourceExtra": {
+          "sourceStatus": "AWARDED",
+          "sourceStatusRaw": "Awarded",
+          "feedStatus": "active",
+          "tenderId": "46",
+          "userId": "31",
+          "region": "1",
+          "regionName": "Tenders",
+          "rowNum": 1,
+          "bidNumberRaw": " cidb 004 2627",
+          "dateRaw": "2026-06-01 17:35:25",
+          "specificationDateTime": "2026-06-01 17:35:25",
+          "awardsDateTime": "2026-06-29 12:58:56",
+          "feedUrl": "https://www.cidb.org.za/tenders.json",
+          "pageNumber": 1
+        },
+        "inferred": {
+          "province": "Gauteng",
+          "tenderType": "Works",
+          "closingDate": null
+        }
+      }
+    },
+    {
+      "externalId": "CIDB-CIDB-005-2627",
+      "source": "CIDB",
+      "bidNumber": "CIDB 005 2627",
+      "title": "Appointment of a service provider to supply, install and maintain SD-WAN with managed firewalls, unified communication platform (uCaaS) and domains management for a period of 36 months.",
+      "description": "Appointment of a service provider to supply, install and maintain SD-WAN with managed firewalls, unified communication platform (uCaaS) and domains management for a period of 36 months.",
+      "organisation": "Construction Industry Development Board",
+      "tenderType": "Supply",
+      "status": "AWARDED",
+      "province": null,
+      "location": null,
+      "municipality": null,
+      "publishedDate": "2026-05-29T17:48:06.000Z",
+      "closingDate": null,
+      "briefingDate": null,
+      "briefingRequired": false,
+      "briefingLocation": null,
+      "cidbGrade": null,
+      "cidbGradeRaw": null,
+      "cidbClass": [],
+      "cidbClassRaw": null,
+      "estimatedValue": null,
+      "contact": {
+        "name": null,
+        "email": null,
+        "phone": null
+      },
+      "documents": [
+        {
+          "name": "GET BID DOCUMENT",
+          "documentType": "BID_DOCUMENT",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb-005-2627-tender-document-sdwan-voip-ucaas.pdf",
+          "fileName": "cidb-005-2627-tender-document-sdwan-voip-ucaas.pdf",
+          "mimeType": "application/pdf"
+        },
+        {
+          "name": "GET ADDENDUM",
+          "documentType": "ADDENDUM",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/addendum-no-01-cidb-005-2627.pdf",
+          "fileName": "addendum-no-01-cidb-005-2627.pdf",
+          "mimeType": "application/pdf"
+        },
+        {
+          "name": "BID OPENING REGISTER",
+          "documentType": "OPENING_REGISTER",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb-005-26-27-bid-opening-register--install-and-maintain-sdwan.pdf",
+          "fileName": "cidb-005-26-27-bid-opening-register--install-and-maintain-sdwan.pdf",
+          "mimeType": "application/pdf"
+        },
+        {
+          "name": "BRIEFING NOTE",
+          "documentType": "BRIEFING_NOTE",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb-005-2627-msa-draft.pdf",
+          "fileName": "cidb-005-2627-msa-draft.pdf",
+          "mimeType": "application/pdf"
+        }
+      ],
+      "sourceUrl": "https://www.cidb.org.za/cidb-tenders/current-tenders/",
+      "rawHash": "c5e387aa14d1bdf32b5619c20ab7788161767decb69c34950be93a592f709b6c",
+      "rawData": {
+        "bidNumberRaw": "cidb 005 2627",
+        "dateRaw": "2026-05-29 17:48:06",
+        "descriptionRaw": "Appointment of a service provider to supply, install and maintain SD-WAN with managed firewalls, unified communication platform (uCaaS) and domains management for a period of 36 months.",
+        "sourceUrl": "https://www.cidb.org.za/cidb-tenders/current-tenders/",
+        "documentUrls": [
+          {
+            "label": "GET BID DOCUMENT",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb-005-2627-tender-document-sdwan-voip-ucaas.pdf"
+          },
+          {
+            "label": "GET ADDENDUM",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/addendum-no-01-cidb-005-2627.pdf"
+          },
+          {
+            "label": "BID OPENING REGISTER",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb-005-26-27-bid-opening-register--install-and-maintain-sdwan.pdf"
+          },
+          {
+            "label": "BRIEFING NOTE",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb-005-2627-msa-draft.pdf"
+          }
+        ],
+        "sourceStatus": "AWARDED",
+        "sourceStatusRaw": "Awarded",
+        "sourceExtra": {
+          "sourceStatus": "AWARDED",
+          "sourceStatusRaw": "Awarded",
+          "feedStatus": "active",
+          "tenderId": "45",
+          "userId": "31",
+          "region": "1",
+          "regionName": "Tenders",
+          "rowNum": 2,
+          "bidNumberRaw": "cidb 005 2627",
+          "dateRaw": "2026-05-29 17:48:06",
+          "specificationDateTime": "2026-06-15 18:26:14",
+          "awardsDateTime": "2026-07-03 13:26:06",
+          "feedUrl": "https://www.cidb.org.za/tenders.json",
+          "pageNumber": 1
+        },
+        "inferred": {
+          "province": null,
+          "tenderType": "Supply",
+          "closingDate": null
+        }
+      }
+    },
+    {
+      "externalId": "CIDB-CIDB-002-2627",
+      "source": "CIDB",
+      "bidNumber": "CIDB 002 2627",
+      "title": "Appointment of a service provider to conduct a cidb Small and Medium Enterprise Business Conditions Survey",
+      "description": "Appointment of a service provider to conduct a cidb Small and Medium Enterprise Business Conditions Survey.\n\nClick here to download the Pricing Schedule.",
+      "organisation": "Construction Industry Development Board",
+      "tenderType": "Services",
+      "status": "AWARDED",
+      "province": null,
+      "location": null,
+      "municipality": null,
+      "publishedDate": "2026-05-29T17:42:03.000Z",
+      "closingDate": null,
+      "briefingDate": null,
+      "briefingRequired": false,
+      "briefingLocation": null,
+      "cidbGrade": null,
+      "cidbGradeRaw": null,
+      "cidbClass": [],
+      "cidbClassRaw": null,
+      "estimatedValue": null,
+      "contact": {
+        "name": null,
+        "email": null,
+        "phone": null
+      },
+      "documents": [
+        {
+          "name": "GET BID DOCUMENT",
+          "documentType": "BID_DOCUMENT",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb-002-2627-tender-cidb-small-and-medium-enterprise-business-conditions-survey.pdf",
+          "fileName": "cidb-002-2627-tender-cidb-small-and-medium-enterprise-business-conditions-survey.pdf",
+          "mimeType": "application/pdf"
+        },
+        {
+          "name": "BID OPENING REGISTER",
+          "documentType": "OPENING_REGISTER",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb-002-26-27-bid-opening-register--conduct-a-cidb-small-and-medium-enterprise-business-conditions-survey.pdf",
+          "fileName": "cidb-002-26-27-bid-opening-register--conduct-a-cidb-small-and-medium-enterprise-business-conditions-survey.pdf",
+          "mimeType": "application/pdf"
+        },
+        {
+          "name": "BRIEFING NOTE",
+          "documentType": "BRIEFING_NOTE",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb-002-2627-msa-draft.pdf",
+          "fileName": "cidb-002-2627-msa-draft.pdf",
+          "mimeType": "application/pdf"
+        },
+        {
+          "name": "Click here",
+          "documentType": "PRICING_SCHEDULE",
+          "url": "https://www.cidb.org.za/wp-content/uploads/2026/06/annexure-b-cidb-pricing-schedule-cidb-002-2627.xlsx",
+          "fileName": "annexure-b-cidb-pricing-schedule-cidb-002-2627.xlsx",
+          "mimeType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        }
+      ],
+      "sourceUrl": "https://www.cidb.org.za/cidb-tenders/current-tenders/",
+      "rawHash": "dfe637a4f10c4cd1770d28c58265563ecdaa36f0791a4eda061497c214d4bba7",
+      "rawData": {
+        "bidNumberRaw": "cidb 002 2627",
+        "dateRaw": "2026-05-29 17:42:03",
+        "descriptionRaw": "Appointment of a service provider to conduct a cidb Small and Medium Enterprise Business Conditions Survey.\n\nClick here to download the Pricing Schedule.",
+        "sourceUrl": "https://www.cidb.org.za/cidb-tenders/current-tenders/",
+        "documentUrls": [
+          {
+            "label": "GET BID DOCUMENT",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb-002-2627-tender-cidb-small-and-medium-enterprise-business-conditions-survey.pdf"
+          },
+          {
+            "label": "BID OPENING REGISTER",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb-002-26-27-bid-opening-register--conduct-a-cidb-small-and-medium-enterprise-business-conditions-survey.pdf"
+          },
+          {
+            "label": "BRIEFING NOTE",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb-002-2627-msa-draft.pdf"
+          },
+          {
+            "label": "Click here",
+            "url": "https://www.cidb.org.za/wp-content/uploads/2026/06/annexure-b-cidb-pricing-schedule-cidb-002-2627.xlsx"
+          }
+        ],
+        "sourceStatus": "AWARDED",
+        "sourceStatusRaw": "Awarded",
+        "sourceExtra": {
+          "sourceStatus": "AWARDED",
+          "sourceStatusRaw": "Awarded",
+          "feedStatus": "active",
+          "tenderId": "44",
+          "userId": "31",
+          "region": "1",
+          "regionName": "Tenders",
+          "rowNum": 3,
+          "bidNumberRaw": "cidb 002 2627",
+          "dateRaw": "2026-05-29 17:42:03",
+          "specificationDateTime": "2026-05-29 17:40:16",
+          "awardsDateTime": "2026-07-01 03:55:00",
+          "feedUrl": "https://www.cidb.org.za/tenders.json",
+          "pageNumber": 1
+        },
+        "inferred": {
+          "province": null,
+          "tenderType": "Services",
+          "closingDate": null
+        }
+      }
+    },
+    {
+      "externalId": "CIDB-CIDB-017-2526",
+      "source": "CIDB",
+      "bidNumber": "CIDB 017 2526",
+      "title": "Appointment of a service provider to render comprehensive and professional cleaning and hygiene, pest control and waste management services to nine (9) cidb offices for a period of three (3) years",
+      "description": "Appointment of a service provider to render comprehensive and professional cleaning and hygiene, pest control and waste management services to nine (9) cidb offices for a period of three (3) years.\n\nClick here to download the Pricing Schedule.\n\nClick here to download Addendum No 2.\n\nClick here to download Addendum No 3.",
+      "organisation": "Construction Industry Development Board",
+      "tenderType": "Services",
+      "status": "AWARDED",
+      "province": null,
+      "location": null,
+      "municipality": null,
+      "publishedDate": "2026-03-31T16:59:17.000Z",
+      "closingDate": null,
+      "briefingDate": null,
+      "briefingRequired": false,
+      "briefingLocation": null,
+      "cidbGrade": null,
+      "cidbGradeRaw": null,
+      "cidbClass": [],
+      "cidbClassRaw": null,
+      "estimatedValue": null,
+      "contact": {
+        "name": null,
+        "email": null,
+        "phone": null
+      },
+      "documents": [
+        {
+          "name": "GET BID DOCUMENT",
+          "documentType": "BID_DOCUMENT",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb-017-2526-provision-of-professional-cleaning-services.pdf",
+          "fileName": "cidb-017-2526-provision-of-professional-cleaning-services.pdf",
+          "mimeType": "application/pdf"
+        },
+        {
+          "name": "GET ADDENDUM",
+          "documentType": "ADDENDUM",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/addendum-no-1-cidb-017-2526.pdf",
+          "fileName": "addendum-no-1-cidb-017-2526.pdf",
+          "mimeType": "application/pdf"
+        },
+        {
+          "name": "BID OPENING REGISTER",
+          "documentType": "OPENING_REGISTER",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/bid-opening-register-cidb-017-2526.pdf",
+          "fileName": "bid-opening-register-cidb-017-2526.pdf",
+          "mimeType": "application/pdf"
+        },
+        {
+          "name": "BRIEFING NOTE",
+          "documentType": "BRIEFING_NOTE",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb-017-2526-msa-draft.pdf",
+          "fileName": "cidb-017-2526-msa-draft.pdf",
+          "mimeType": "application/pdf"
+        },
+        {
+          "name": "Click here",
+          "documentType": "PRICING_SCHEDULE",
+          "url": "https://www.cidb.org.za/wp-content/uploads/2026/04/Pricing-template-cidb-017-2526.xlsx",
+          "fileName": "Pricing-template-cidb-017-2526.xlsx",
+          "mimeType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        },
+        {
+          "name": "Click here",
+          "documentType": "ADDENDUM",
+          "url": "https://www.cidb.org.za/wp-content/uploads/2026/05/addendum-no2-cidb-017-2526.pdf",
+          "fileName": "addendum-no2-cidb-017-2526.pdf",
+          "mimeType": "application/pdf"
+        },
+        {
+          "name": "Click here",
+          "documentType": "ADDENDUM",
+          "url": "https://www.cidb.org.za/wp-content/uploads/2026/05/addendum-no-3-cidb-017-2526.pdf",
+          "fileName": "addendum-no-3-cidb-017-2526.pdf",
+          "mimeType": "application/pdf"
+        }
+      ],
+      "sourceUrl": "https://www.cidb.org.za/cidb-tenders/current-tenders/",
+      "rawHash": "6d39018087db6760c6751cadf99793e0719084131f0b35893a696aa8bf45c303",
+      "rawData": {
+        "bidNumberRaw": "cidb 017 2526",
+        "dateRaw": "2026-03-31 16:59:17",
+        "descriptionRaw": "Appointment of a service provider to render comprehensive and professional cleaning and hygiene, pest control and waste management services to nine (9) cidb offices for a period of three (3) years.\n\nClick here to download the Pricing Schedule.\n\nClick here to download Addendum No 2.\n\nClick here to download Addendum No 3.",
+        "sourceUrl": "https://www.cidb.org.za/cidb-tenders/current-tenders/",
+        "documentUrls": [
+          {
+            "label": "GET BID DOCUMENT",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb-017-2526-provision-of-professional-cleaning-services.pdf"
+          },
+          {
+            "label": "GET ADDENDUM",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/addendum-no-1-cidb-017-2526.pdf"
+          },
+          {
+            "label": "BID OPENING REGISTER",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/bid-opening-register-cidb-017-2526.pdf"
+          },
+          {
+            "label": "BRIEFING NOTE",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb-017-2526-msa-draft.pdf"
+          },
+          {
+            "label": "Click here",
+            "url": "https://www.cidb.org.za/wp-content/uploads/2026/04/Pricing-template-cidb-017-2526.xlsx"
+          },
+          {
+            "label": "Click here",
+            "url": "https://www.cidb.org.za/wp-content/uploads/2026/05/addendum-no2-cidb-017-2526.pdf"
+          },
+          {
+            "label": "Click here",
+            "url": "https://www.cidb.org.za/wp-content/uploads/2026/05/addendum-no-3-cidb-017-2526.pdf"
+          }
+        ],
+        "sourceStatus": "AWARDED",
+        "sourceStatusRaw": "Awarded",
+        "sourceExtra": {
+          "sourceStatus": "AWARDED",
+          "sourceStatusRaw": "Awarded",
+          "feedStatus": "active",
+          "tenderId": "41",
+          "userId": "31",
+          "region": "1",
+          "regionName": "Tenders",
+          "rowNum": 4,
+          "bidNumberRaw": "cidb 017 2526",
+          "dateRaw": "2026-03-31 16:59:17",
+          "specificationDateTime": "2026-04-28 15:59:06",
+          "awardsDateTime": "2026-05-25 08:42:24",
+          "feedUrl": "https://www.cidb.org.za/tenders.json",
+          "pageNumber": 1
+        },
+        "inferred": {
+          "province": null,
+          "tenderType": "Services",
+          "closingDate": null
+        }
+      }
+    },
+    {
+      "externalId": "CIDB-CIDB-018-2526",
+      "source": "CIDB",
+      "bidNumber": "CIDB 018 2526",
+      "title": "Appointment of a service provider for the supply, installation and maintenance of network cabling to nine (9) cidb offices for a period of three (3) years, as an when required basis",
+      "description": "Appointment of a service provider for the supply, installation and maintenance of network cabling to nine (9) cidb offices for a period of three (3) years, as an when required basis.\n\nClick here to download the Pricing Schedule for Network Cabling.\n\nClick here to download Addendum No 2.",
+      "organisation": "Construction Industry Development Board",
+      "tenderType": "Supply",
+      "status": "AWARDED",
+      "province": null,
+      "location": null,
+      "municipality": null,
+      "publishedDate": "2026-03-31T16:49:26.000Z",
+      "closingDate": null,
+      "briefingDate": null,
+      "briefingRequired": false,
+      "briefingLocation": null,
+      "cidbGrade": null,
+      "cidbGradeRaw": null,
+      "cidbClass": [],
+      "cidbClassRaw": null,
+      "estimatedValue": null,
+      "contact": {
+        "name": null,
+        "email": null,
+        "phone": null
+      },
+      "documents": [
+        {
+          "name": "GET BID DOCUMENT",
+          "documentType": "BID_DOCUMENT",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb-018-2526-supply-installation-and-maintenance-of-network-cabling-for-a-period-of-36-months.pdf",
+          "fileName": "cidb-018-2526-supply-installation-and-maintenance-of-network-cabling-for-a-period-of-36-months.pdf",
+          "mimeType": "application/pdf"
+        },
+        {
+          "name": "GET ADDENDUM",
+          "documentType": "ADDENDUM",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/addendum-no1-cidb-018-2526.pdf",
+          "fileName": "addendum-no1-cidb-018-2526.pdf",
+          "mimeType": "application/pdf"
+        },
+        {
+          "name": "BID OPENING REGISTER",
+          "documentType": "OPENING_REGISTER",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/bid-opening-register-cidb-018-2526.pdf",
+          "fileName": "bid-opening-register-cidb-018-2526.pdf",
+          "mimeType": "application/pdf"
+        },
+        {
+          "name": "BRIEFING NOTE",
+          "documentType": "BRIEFING_NOTE",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb-018-2526-msa-draft.pdf",
+          "fileName": "cidb-018-2526-msa-draft.pdf",
+          "mimeType": "application/pdf"
+        },
+        {
+          "name": "Click here",
+          "documentType": "PRICING_SCHEDULE",
+          "url": "https://www.cidb.org.za/wp-content/uploads/2026/04/annexure-b-pricing-schedule-for-network-cabling.xlsx",
+          "fileName": "annexure-b-pricing-schedule-for-network-cabling.xlsx",
+          "mimeType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        },
+        {
+          "name": "Click here",
+          "documentType": "ADDENDUM",
+          "url": "https://www.cidb.org.za/wp-content/uploads/2026/05/addendum-no-02-cidb-018-2526.pdf",
+          "fileName": "addendum-no-02-cidb-018-2526.pdf",
+          "mimeType": "application/pdf"
+        }
+      ],
+      "sourceUrl": "https://www.cidb.org.za/cidb-tenders/current-tenders/",
+      "rawHash": "6400cb15629c1b4bda7d354e51efdf5e38a087328db6531ecbec2ad2b7694690",
+      "rawData": {
+        "bidNumberRaw": " cidb 018 2526",
+        "dateRaw": "2026-03-31 16:49:26",
+        "descriptionRaw": "Appointment of a service provider for the supply, installation and maintenance of network cabling to nine (9) cidb offices for a period of three (3) years, as an when required basis.\n\nClick here to download the Pricing Schedule for Network Cabling.\n\nClick here to download Addendum No 2.",
+        "sourceUrl": "https://www.cidb.org.za/cidb-tenders/current-tenders/",
+        "documentUrls": [
+          {
+            "label": "GET BID DOCUMENT",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb-018-2526-supply-installation-and-maintenance-of-network-cabling-for-a-period-of-36-months.pdf"
+          },
+          {
+            "label": "GET ADDENDUM",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/addendum-no1-cidb-018-2526.pdf"
+          },
+          {
+            "label": "BID OPENING REGISTER",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/bid-opening-register-cidb-018-2526.pdf"
+          },
+          {
+            "label": "BRIEFING NOTE",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb-018-2526-msa-draft.pdf"
+          },
+          {
+            "label": "Click here",
+            "url": "https://www.cidb.org.za/wp-content/uploads/2026/04/annexure-b-pricing-schedule-for-network-cabling.xlsx"
+          },
+          {
+            "label": "Click here",
+            "url": "https://www.cidb.org.za/wp-content/uploads/2026/05/addendum-no-02-cidb-018-2526.pdf"
+          }
+        ],
+        "sourceStatus": "AWARDED",
+        "sourceStatusRaw": "Awarded",
+        "sourceExtra": {
+          "sourceStatus": "AWARDED",
+          "sourceStatusRaw": "Awarded",
+          "feedStatus": "active",
+          "tenderId": "39",
+          "userId": "31",
+          "region": "1",
+          "regionName": "Tenders",
+          "rowNum": 5,
+          "bidNumberRaw": " cidb 018 2526",
+          "dateRaw": "2026-03-31 16:49:26",
+          "specificationDateTime": "2026-05-04 18:07:36",
+          "awardsDateTime": "2026-05-15 16:40:00",
+          "feedUrl": "https://www.cidb.org.za/tenders.json",
+          "pageNumber": 1
+        },
+        "inferred": {
+          "province": null,
+          "tenderType": "Supply",
+          "closingDate": null
+        }
+      }
+    },
+    {
+      "externalId": "CIDB-CIDB-005-2526",
+      "source": "CIDB",
+      "bidNumber": "CIDB 005 2526",
+      "title": "Appointment of a service provider/s for the provision of general maintenance services to nine (9) cidb offices for a period of three (3) years",
+      "description": "Appointment of a service provider/s for the provision of general maintenance services to nine (9) cidb offices for a period of three (3) years.\nClick here to download the corrected Pricing Schedule for General Maintenance.",
+      "organisation": "Construction Industry Development Board",
+      "tenderType": "Services",
+      "status": "AWARDED",
+      "province": null,
+      "location": null,
+      "municipality": null,
+      "publishedDate": "2026-03-31T16:43:55.000Z",
+      "closingDate": null,
+      "briefingDate": null,
+      "briefingRequired": false,
+      "briefingLocation": null,
+      "cidbGrade": null,
+      "cidbGradeRaw": null,
+      "cidbClass": [],
+      "cidbClassRaw": null,
+      "estimatedValue": null,
+      "contact": {
+        "name": null,
+        "email": null,
+        "phone": null
+      },
+      "documents": [
+        {
+          "name": "GET BID DOCUMENT",
+          "documentType": "BID_DOCUMENT",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb-005-2526-tender-document-general-maintenance-national-tender.pdf",
+          "fileName": "cidb-005-2526-tender-document-general-maintenance-national-tender.pdf",
+          "mimeType": "application/pdf"
+        },
+        {
+          "name": "GET ADDENDUM",
+          "documentType": "ADDENDUM",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/addendum-no-1-cidb-005-2526.pdf",
+          "fileName": "addendum-no-1-cidb-005-2526.pdf",
+          "mimeType": "application/pdf"
+        },
+        {
+          "name": "BID OPENING REGISTER",
+          "documentType": "OPENING_REGISTER",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/bid-opening-register-cidb-005-2526.pdf",
+          "fileName": "bid-opening-register-cidb-005-2526.pdf",
+          "mimeType": "application/pdf"
+        },
+        {
+          "name": "Click here",
+          "documentType": "OTHER",
+          "url": "https://www.cidb.org.za/wp-content/uploads/2026/04/annexure-a-unpriced-general-maintenance-national-version-2.xlsx%22",
+          "fileName": "annexure-a-unpriced-general-maintenance-national-version-2.xlsx\"",
+          "mimeType": null
+        }
+      ],
+      "sourceUrl": "https://www.cidb.org.za/cidb-tenders/current-tenders/",
+      "rawHash": "3a7d7c9720d66d730c442226d9a372dda42d224def0c0c03acf207c6d6468b1c",
+      "rawData": {
+        "bidNumberRaw": "cidb 005 2526",
+        "dateRaw": "2026-03-31 16:43:55",
+        "descriptionRaw": "Appointment of a service provider/s for the provision of general maintenance services to nine (9) cidb offices for a period of three (3) years.\nClick here to download the corrected Pricing Schedule for General Maintenance.",
+        "sourceUrl": "https://www.cidb.org.za/cidb-tenders/current-tenders/",
+        "documentUrls": [
+          {
+            "label": "GET BID DOCUMENT",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb-005-2526-tender-document-general-maintenance-national-tender.pdf"
+          },
+          {
+            "label": "GET ADDENDUM",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/addendum-no-1-cidb-005-2526.pdf"
+          },
+          {
+            "label": "BID OPENING REGISTER",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/bid-opening-register-cidb-005-2526.pdf"
+          },
+          {
+            "label": "Click here",
+            "url": "https://www.cidb.org.za/wp-content/uploads/2026/04/annexure-a-unpriced-general-maintenance-national-version-2.xlsx%22"
+          }
+        ],
+        "sourceStatus": "AWARDED",
+        "sourceStatusRaw": "Awarded",
+        "sourceExtra": {
+          "sourceStatus": "AWARDED",
+          "sourceStatusRaw": "Awarded",
+          "feedStatus": "active",
+          "tenderId": "43",
+          "userId": "31",
+          "region": "1",
+          "regionName": "Tenders",
+          "rowNum": 6,
+          "bidNumberRaw": "cidb 005 2526",
+          "dateRaw": "2026-03-31 16:43:55",
+          "specificationDateTime": "2026-04-22 13:33:52",
+          "awardsDateTime": "2026-06-01 13:18:59",
+          "feedUrl": "https://www.cidb.org.za/tenders.json",
+          "pageNumber": 1
+        },
+        "inferred": {
+          "province": null,
+          "tenderType": "Services",
+          "closingDate": null
+        }
+      }
+    },
+    {
+      "externalId": "CIDB-CIDB-019-2526",
+      "source": "CIDB",
+      "bidNumber": "CIDB 019 2526",
+      "title": "Appointment of a service provider for supply and delivery of 150 all in one (AIO) computer desktops including a five-year onsite warranty",
+      "description": "Appointment of a service provider for supply and delivery of 150 all in one (AIO) computer desktops including a five-year onsite warranty.\n\nClick here to download Addendum No 2.",
+      "organisation": "Construction Industry Development Board",
+      "tenderType": "Supply",
+      "status": "AWARDED",
+      "province": null,
+      "location": null,
+      "municipality": null,
+      "publishedDate": "2026-03-31T16:42:23.000Z",
+      "closingDate": null,
+      "briefingDate": null,
+      "briefingRequired": false,
+      "briefingLocation": null,
+      "cidbGrade": null,
+      "cidbGradeRaw": null,
+      "cidbClass": [],
+      "cidbClassRaw": null,
+      "estimatedValue": null,
+      "contact": {
+        "name": null,
+        "email": null,
+        "phone": null
+      },
+      "documents": [
+        {
+          "name": "GET BID DOCUMENT",
+          "documentType": "BID_DOCUMENT",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/supply-and-delivery-of-aio-desktops-finalv2.pdf",
+          "fileName": "supply-and-delivery-of-aio-desktops-finalv2.pdf",
+          "mimeType": "application/pdf"
+        },
+        {
+          "name": "GET ADDENDUM",
+          "documentType": "ADDENDUM",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/addendum-no1-cidb-019-2526.pdf",
+          "fileName": "addendum-no1-cidb-019-2526.pdf",
+          "mimeType": "application/pdf"
+        },
+        {
+          "name": "BID OPENING REGISTER",
+          "documentType": "OPENING_REGISTER",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/bid-opening-register-cidb-019-2526.pdf",
+          "fileName": "bid-opening-register-cidb-019-2526.pdf",
+          "mimeType": "application/pdf"
+        },
+        {
+          "name": "BRIEFING NOTE",
+          "documentType": "BRIEFING_NOTE",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb0192526-msa-draft.pdf",
+          "fileName": "cidb0192526-msa-draft.pdf",
+          "mimeType": "application/pdf"
+        },
+        {
+          "name": "Click here",
+          "documentType": "ADDENDUM",
+          "url": "https://www.cidb.org.za/wp-content/uploads/2026/05/addendum-no-02-cidb-019-2526.pdf",
+          "fileName": "addendum-no-02-cidb-019-2526.pdf",
+          "mimeType": "application/pdf"
+        }
+      ],
+      "sourceUrl": "https://www.cidb.org.za/cidb-tenders/current-tenders/",
+      "rawHash": "13d2747c8f1acac6257da2568320a5facc5e7ed47c6a68728a80c31a70b7b604",
+      "rawData": {
+        "bidNumberRaw": " cidb 019 2526",
+        "dateRaw": "2026-03-31 16:42:23",
+        "descriptionRaw": "Appointment of a service provider for supply and delivery of 150 all in one (AIO) computer desktops including a five-year onsite warranty.\n\nClick here to download Addendum No 2.",
+        "sourceUrl": "https://www.cidb.org.za/cidb-tenders/current-tenders/",
+        "documentUrls": [
+          {
+            "label": "GET BID DOCUMENT",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/supply-and-delivery-of-aio-desktops-finalv2.pdf"
+          },
+          {
+            "label": "GET ADDENDUM",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/addendum-no1-cidb-019-2526.pdf"
+          },
+          {
+            "label": "BID OPENING REGISTER",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/bid-opening-register-cidb-019-2526.pdf"
+          },
+          {
+            "label": "BRIEFING NOTE",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb0192526-msa-draft.pdf"
+          },
+          {
+            "label": "Click here",
+            "url": "https://www.cidb.org.za/wp-content/uploads/2026/05/addendum-no-02-cidb-019-2526.pdf"
+          }
+        ],
+        "sourceStatus": "AWARDED",
+        "sourceStatusRaw": "Awarded",
+        "sourceExtra": {
+          "sourceStatus": "AWARDED",
+          "sourceStatusRaw": "Awarded",
+          "feedStatus": "active",
+          "tenderId": "38",
+          "userId": "31",
+          "region": "1",
+          "regionName": "Tenders",
+          "rowNum": 7,
+          "bidNumberRaw": " cidb 019 2526",
+          "dateRaw": "2026-03-31 16:42:23",
+          "specificationDateTime": "2026-05-04 18:08:32",
+          "awardsDateTime": "2026-05-15 16:40:30",
+          "feedUrl": "https://www.cidb.org.za/tenders.json",
+          "pageNumber": 1
+        },
+        "inferred": {
+          "province": null,
+          "tenderType": "Supply",
+          "closingDate": null
+        }
+      }
+    },
+    {
+      "externalId": "CIDB-CIDB-020-2526",
+      "source": "CIDB",
+      "bidNumber": "CIDB 020 2526",
+      "title": "Appointment of a service provider for the maintenance of the HVAC system, for a period of three years at the cidb head office in Centurion",
+      "description": "Appointment of a service provider for the maintenance of the HVAC system, for a period of three years at the cidb head office in Centurion.\nClick here to download the corrected Pricing Schedule for HVAC Maintenance.",
+      "organisation": "Construction Industry Development Board",
+      "tenderType": "Services",
+      "status": "AWARDED",
+      "province": "Gauteng",
+      "location": null,
+      "municipality": null,
+      "publishedDate": "2026-03-31T16:41:57.000Z",
+      "closingDate": null,
+      "briefingDate": null,
+      "briefingRequired": false,
+      "briefingLocation": null,
+      "cidbGrade": null,
+      "cidbGradeRaw": null,
+      "cidbClass": [],
+      "cidbClassRaw": null,
+      "estimatedValue": null,
+      "contact": {
+        "name": null,
+        "email": null,
+        "phone": null
+      },
+      "documents": [
+        {
+          "name": "GET BID DOCUMENT",
+          "documentType": "BID_DOCUMENT",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb-020-2526-tender-document-hvac-maintenance-tender.pdf",
+          "fileName": "cidb-020-2526-tender-document-hvac-maintenance-tender.pdf",
+          "mimeType": "application/pdf"
+        },
+        {
+          "name": "GET ADDENDUM",
+          "documentType": "ADDENDUM",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/addendum-no-1-cidb-020-2526.pdf",
+          "fileName": "addendum-no-1-cidb-020-2526.pdf",
+          "mimeType": "application/pdf"
+        },
+        {
+          "name": "BID OPENING REGISTER",
+          "documentType": "OPENING_REGISTER",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/bulk-bidders-template-cidb-020-2526.pdf",
+          "fileName": "bulk-bidders-template-cidb-020-2526.pdf",
+          "mimeType": "application/pdf"
+        },
+        {
+          "name": "Click here",
+          "documentType": "OTHER",
+          "url": "https://www.cidb.org.za/wp-content/uploads/2026/04/annexure-a-corrected-unpriced-cidb-centurion-hvac-maintenance-version-2.xlsx",
+          "fileName": "annexure-a-corrected-unpriced-cidb-centurion-hvac-maintenance-version-2.xlsx",
+          "mimeType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        }
+      ],
+      "sourceUrl": "https://www.cidb.org.za/cidb-tenders/current-tenders/",
+      "rawHash": "41529341d92e77f35f7afdf788ff9f32af35bb0f8f01b00e7910e49c75b3ddc4",
+      "rawData": {
+        "bidNumberRaw": "cidb 020 2526",
+        "dateRaw": "2026-03-31 16:41:57",
+        "descriptionRaw": "Appointment of a service provider for the maintenance of the HVAC system, for a period of three years at the cidb head office in Centurion.\nClick here to download the corrected Pricing Schedule for HVAC Maintenance.",
+        "sourceUrl": "https://www.cidb.org.za/cidb-tenders/current-tenders/",
+        "documentUrls": [
+          {
+            "label": "GET BID DOCUMENT",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb-020-2526-tender-document-hvac-maintenance-tender.pdf"
+          },
+          {
+            "label": "GET ADDENDUM",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/addendum-no-1-cidb-020-2526.pdf"
+          },
+          {
+            "label": "BID OPENING REGISTER",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/bulk-bidders-template-cidb-020-2526.pdf"
+          },
+          {
+            "label": "Click here",
+            "url": "https://www.cidb.org.za/wp-content/uploads/2026/04/annexure-a-corrected-unpriced-cidb-centurion-hvac-maintenance-version-2.xlsx"
+          }
+        ],
+        "sourceStatus": "AWARDED",
+        "sourceStatusRaw": "Awarded",
+        "sourceExtra": {
+          "sourceStatus": "AWARDED",
+          "sourceStatusRaw": "Awarded",
+          "feedStatus": "active",
+          "tenderId": "42",
+          "userId": "31",
+          "region": "1",
+          "regionName": "Tenders",
+          "rowNum": 8,
+          "bidNumberRaw": "cidb 020 2526",
+          "dateRaw": "2026-03-31 16:41:57",
+          "specificationDateTime": "2026-04-22 13:32:04",
+          "awardsDateTime": "2026-05-25 14:39:09",
+          "feedUrl": "https://www.cidb.org.za/tenders.json",
+          "pageNumber": 1
+        },
+        "inferred": {
+          "province": "Gauteng",
+          "tenderType": "Services",
+          "closingDate": null
+        }
+      }
+    },
+    {
+      "externalId": "CIDB-CIDB-012-2526",
+      "source": "CIDB",
+      "bidNumber": "CIDB 012 2526",
+      "title": "Appointment of a contractor for the cleaning, repair and painting of external walls and fixtures at the cidb head office in Centurion",
+      "description": "Appointment of a contractor for the cleaning, repair and painting of external walls and fixtures at the cidb head office in Centurion.\n\nClick here to download the corrected Unpriced Painting BOQ.",
+      "organisation": "Construction Industry Development Board",
+      "tenderType": "Works",
+      "status": "AWARDED",
+      "province": "Gauteng",
+      "location": null,
+      "municipality": null,
+      "publishedDate": "2026-03-27T16:51:28.000Z",
+      "closingDate": null,
+      "briefingDate": null,
+      "briefingRequired": false,
+      "briefingLocation": null,
+      "cidbGrade": null,
+      "cidbGradeRaw": null,
+      "cidbClass": [],
+      "cidbClassRaw": null,
+      "estimatedValue": null,
+      "contact": {
+        "name": null,
+        "email": null,
+        "phone": null
+      },
+      "documents": [
+        {
+          "name": "GET BID DOCUMENT",
+          "documentType": "BID_DOCUMENT",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb-012-2526-tender-document-painting-tender.pdf",
+          "fileName": "cidb-012-2526-tender-document-painting-tender.pdf",
+          "mimeType": "application/pdf"
+        },
+        {
+          "name": "GET ADDENDUM",
+          "documentType": "ADDENDUM",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/addendum-no-1-cidb-012-2526.pdf",
+          "fileName": "addendum-no-1-cidb-012-2526.pdf",
+          "mimeType": "application/pdf"
+        },
+        {
+          "name": "BID OPENING REGISTER",
+          "documentType": "OPENING_REGISTER",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/bid-opening-register-cidb-012-2526.pdf",
+          "fileName": "bid-opening-register-cidb-012-2526.pdf",
+          "mimeType": "application/pdf"
+        },
+        {
+          "name": "Click here",
+          "documentType": "PRICING_SCHEDULE",
+          "url": "https://www.cidb.org.za/wp-content/uploads/2026/04/annexure-a-corrected-unpriced-painting-boq-version-2.xlsx",
+          "fileName": "annexure-a-corrected-unpriced-painting-boq-version-2.xlsx",
+          "mimeType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        }
+      ],
+      "sourceUrl": "https://www.cidb.org.za/cidb-tenders/current-tenders/",
+      "rawHash": "c06249d7d37740aa2df9eed59bbc4ec8b369e55217112c3a45975c9198e42dc0",
+      "rawData": {
+        "bidNumberRaw": "cidb 012 2526",
+        "dateRaw": "2026-03-27 16:51:28",
+        "descriptionRaw": "Appointment of a contractor for the cleaning, repair and painting of external walls and fixtures at the cidb head office in Centurion.\n\nClick here to download the corrected Unpriced Painting BOQ.",
+        "sourceUrl": "https://www.cidb.org.za/cidb-tenders/current-tenders/",
+        "documentUrls": [
+          {
+            "label": "GET BID DOCUMENT",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb-012-2526-tender-document-painting-tender.pdf"
+          },
+          {
+            "label": "GET ADDENDUM",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/addendum-no-1-cidb-012-2526.pdf"
+          },
+          {
+            "label": "BID OPENING REGISTER",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/bid-opening-register-cidb-012-2526.pdf"
+          },
+          {
+            "label": "Click here",
+            "url": "https://www.cidb.org.za/wp-content/uploads/2026/04/annexure-a-corrected-unpriced-painting-boq-version-2.xlsx"
+          }
+        ],
+        "sourceStatus": "AWARDED",
+        "sourceStatusRaw": "Awarded",
+        "sourceExtra": {
+          "sourceStatus": "AWARDED",
+          "sourceStatusRaw": "Awarded",
+          "feedStatus": "active",
+          "tenderId": "40",
+          "userId": "31",
+          "region": "1",
+          "regionName": "Tenders",
+          "rowNum": 9,
+          "bidNumberRaw": "cidb 012 2526",
+          "dateRaw": "2026-03-27 16:51:28",
+          "specificationDateTime": "2026-04-22 13:35:04",
+          "awardsDateTime": "2026-06-01 16:00:05",
+          "feedUrl": "https://www.cidb.org.za/tenders.json",
+          "pageNumber": 1
+        },
+        "inferred": {
+          "province": "Gauteng",
+          "tenderType": "Works",
+          "closingDate": null
+        }
+      }
+    },
+    {
+      "externalId": "CIDB-CIDB-014-2526",
+      "source": "CIDB",
+      "bidNumber": "CIDB 014 2526",
+      "title": "Appointment of service provider for renewal, Maintenance and support of sage 300 people, Payroll, hr system and direct hire for a period of Three years",
+      "description": "Appointment of service provider for renewal, Maintenance and support of sage 300 people, Payroll, hr system and direct hire for a period of Three years",
+      "organisation": "Construction Industry Development Board",
+      "tenderType": "Services",
+      "status": "AWARDED",
+      "province": null,
+      "location": null,
+      "municipality": null,
+      "publishedDate": "2025-12-18T13:20:13.000Z",
+      "closingDate": null,
+      "briefingDate": null,
+      "briefingRequired": false,
+      "briefingLocation": null,
+      "cidbGrade": null,
+      "cidbGradeRaw": null,
+      "cidbClass": [],
+      "cidbClassRaw": null,
+      "estimatedValue": null,
+      "contact": {
+        "name": null,
+        "email": null,
+        "phone": null
+      },
+      "documents": [
+        {
+          "name": "GET BID DOCUMENT",
+          "documentType": "BID_DOCUMENT",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb-014-2526-tender-document--maintenance-and-support-of-sage.pdf",
+          "fileName": "cidb-014-2526-tender-document--maintenance-and-support-of-sage.pdf",
+          "mimeType": "application/pdf"
+        },
+        {
+          "name": "GET ADDENDUM",
+          "documentType": "ADDENDUM",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/addendum-02-appointment-of-service-provider-for-renewal-maintenance-and-support-of-sage-300-people-payroll.pdf",
+          "fileName": "addendum-02-appointment-of-service-provider-for-renewal-maintenance-and-support-of-sage-300-people-payroll.pdf",
+          "mimeType": "application/pdf"
+        },
+        {
+          "name": "BID OPENING REGISTER",
+          "documentType": "OPENING_REGISTER",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/bid-opening-register-cidb-014-2526.pdf",
+          "fileName": "bid-opening-register-cidb-014-2526.pdf",
+          "mimeType": "application/pdf"
+        },
+        {
+          "name": "BRIEFING NOTE",
+          "documentType": "BRIEFING_NOTE",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb0142526_-msa-draft.pdf",
+          "fileName": "cidb0142526_-msa-draft.pdf",
+          "mimeType": "application/pdf"
+        }
+      ],
+      "sourceUrl": "https://www.cidb.org.za/cidb-tenders/current-tenders/",
+      "rawHash": "a8584ed96fb07207a8760d02078351b3395e7db457e0b689f12d421ced211ab6",
+      "rawData": {
+        "bidNumberRaw": "cidb 014 2526",
+        "dateRaw": "2025-12-18 13:20:13",
+        "descriptionRaw": "Appointment of service provider for renewal, Maintenance and support of sage 300 people, Payroll, hr system and direct hire for a period of Three years",
+        "sourceUrl": "https://www.cidb.org.za/cidb-tenders/current-tenders/",
+        "documentUrls": [
+          {
+            "label": "GET BID DOCUMENT",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb-014-2526-tender-document--maintenance-and-support-of-sage.pdf"
+          },
+          {
+            "label": "GET ADDENDUM",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/addendum-02-appointment-of-service-provider-for-renewal-maintenance-and-support-of-sage-300-people-payroll.pdf"
+          },
+          {
+            "label": "BID OPENING REGISTER",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/bid-opening-register-cidb-014-2526.pdf"
+          },
+          {
+            "label": "BRIEFING NOTE",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb0142526_-msa-draft.pdf"
+          }
+        ],
+        "sourceStatus": "AWARDED",
+        "sourceStatusRaw": "Awarded",
+        "sourceExtra": {
+          "sourceStatus": "AWARDED",
+          "sourceStatusRaw": "Awarded",
+          "feedStatus": "active",
+          "tenderId": "37",
+          "userId": "29",
+          "region": "1",
+          "regionName": "Tenders",
+          "rowNum": 10,
+          "bidNumberRaw": "cidb 014 2526",
+          "dateRaw": "2025-12-18 13:20:13",
+          "specificationDateTime": "2026-01-21 09:21:55",
+          "awardsDateTime": "2026-01-23 23:21:57",
+          "feedUrl": "https://www.cidb.org.za/tenders.json",
+          "pageNumber": 1
+        },
+        "inferred": {
+          "province": null,
+          "tenderType": "Services",
+          "closingDate": null
+        }
+      }
+    },
+    {
+      "externalId": "CIDB-CIDB-011-2526",
+      "source": "CIDB",
+      "bidNumber": "CIDB 011 2526",
+      "title": "Appointment of a forensic auditing firm to conduct independent quality assurance of Grade 7–9 contractor applications for a period of 12 months.",
+      "description": "Appointment of a forensic auditing firm to conduct independent quality assurance of Grade 7–9 contractor applications for a period of 12 months.",
+      "organisation": "Construction Industry Development Board",
+      "tenderType": "Consulting",
+      "status": "AWARDED",
+      "province": null,
+      "location": null,
+      "municipality": null,
+      "publishedDate": "2025-11-11T16:25:49.000Z",
+      "closingDate": null,
+      "briefingDate": null,
+      "briefingRequired": false,
+      "briefingLocation": null,
+      "cidbGrade": "7-9",
+      "cidbGradeRaw": "Grade 7–9",
+      "cidbClass": [],
+      "cidbClassRaw": null,
+      "estimatedValue": null,
+      "contact": {
+        "name": null,
+        "email": null,
+        "phone": null
+      },
+      "documents": [
+        {
+          "name": "GET BID DOCUMENT",
+          "documentType": "BID_DOCUMENT",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb-011-2526-tender-document.pdf",
+          "fileName": "cidb-011-2526-tender-document.pdf",
+          "mimeType": "application/pdf"
+        },
+        {
+          "name": "GET ADDENDUM",
+          "documentType": "ADDENDUM",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/addendum-no-1-cidb-011-2526.pdf",
+          "fileName": "addendum-no-1-cidb-011-2526.pdf",
+          "mimeType": "application/pdf"
+        },
+        {
+          "name": "BID OPENING REGISTER",
+          "documentType": "OPENING_REGISTER",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb-011-2526-bid-opening-certificate.pdf",
+          "fileName": "cidb-011-2526-bid-opening-certificate.pdf",
+          "mimeType": "application/pdf"
+        },
+        {
+          "name": "BRIEFING NOTE",
+          "documentType": "BRIEFING_NOTE",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb0112526_-msa-draft.pdf",
+          "fileName": "cidb0112526_-msa-draft.pdf",
+          "mimeType": "application/pdf"
+        }
+      ],
+      "sourceUrl": "https://www.cidb.org.za/cidb-tenders/current-tenders/",
+      "rawHash": "23876bd49f275f03396fadfa06b352b988a1b2ef8ad046e959f6887afa5ef55f",
+      "rawData": {
+        "bidNumberRaw": "cidb 011 2526",
+        "dateRaw": "2025-11-11 16:25:49",
+        "descriptionRaw": "Appointment of a forensic auditing firm to conduct independent quality assurance of Grade 7–9 contractor applications for a period of 12 months.",
+        "sourceUrl": "https://www.cidb.org.za/cidb-tenders/current-tenders/",
+        "documentUrls": [
+          {
+            "label": "GET BID DOCUMENT",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb-011-2526-tender-document.pdf"
+          },
+          {
+            "label": "GET ADDENDUM",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/addendum-no-1-cidb-011-2526.pdf"
+          },
+          {
+            "label": "BID OPENING REGISTER",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb-011-2526-bid-opening-certificate.pdf"
+          },
+          {
+            "label": "BRIEFING NOTE",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb0112526_-msa-draft.pdf"
+          }
+        ],
+        "sourceStatus": "AWARDED",
+        "sourceStatusRaw": "Awarded",
+        "sourceExtra": {
+          "sourceStatus": "AWARDED",
+          "sourceStatusRaw": "Awarded",
+          "feedStatus": "active",
+          "tenderId": "36",
+          "userId": "29",
+          "region": "1",
+          "regionName": "Tenders",
+          "rowNum": 11,
+          "bidNumberRaw": "cidb 011 2526",
+          "dateRaw": "2025-11-11 16:25:49",
+          "specificationDateTime": "2025-12-10 10:39:20",
+          "awardsDateTime": "2025-12-19 11:52:13",
+          "feedUrl": "https://www.cidb.org.za/tenders.json",
+          "pageNumber": 1
+        },
+        "inferred": {
+          "province": null,
+          "tenderType": "Consulting",
+          "closingDate": null
+        }
+      }
+    },
+    {
+      "externalId": "CIDB-CIDB-010-2526",
+      "source": "CIDB",
+      "bidNumber": "CIDB 010 2526",
+      "title": "Appointment of a service provider to review, update, and align the cidb standard for uniformity in construction procurement with the Public Procurement Act",
+      "description": "Appointment of a service provider to review, update, and align the cidb standard for uniformity in construction procurement with the Public Procurement Act",
+      "organisation": "Construction Industry Development Board",
+      "tenderType": "Works",
+      "status": "AWARDED",
+      "province": null,
+      "location": null,
+      "municipality": null,
+      "publishedDate": "2025-10-24T12:17:55.000Z",
+      "closingDate": null,
+      "briefingDate": null,
+      "briefingRequired": false,
+      "briefingLocation": null,
+      "cidbGrade": null,
+      "cidbGradeRaw": null,
+      "cidbClass": [],
+      "cidbClassRaw": null,
+      "estimatedValue": null,
+      "contact": {
+        "name": null,
+        "email": null,
+        "phone": null
+      },
+      "documents": [
+        {
+          "name": "GET BID DOCUMENT",
+          "documentType": "BID_DOCUMENT",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb-010-2526-tender-document--review-update-and-aligning-the-cidb-standard-for-uniformity-in-construction-procurement-with-the-public-procurement-act-docx.pdf",
+          "fileName": "cidb-010-2526-tender-document--review-update-and-aligning-the-cidb-standard-for-uniformity-in-construction-procurement-with-the-public-procurement-act-docx.pdf",
+          "mimeType": "application/pdf"
+        },
+        {
+          "name": "BID OPENING REGISTER",
+          "documentType": "OPENING_REGISTER",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/bid-opening-register-bid-for-cidb-010-2526.pdf",
+          "fileName": "bid-opening-register-bid-for-cidb-010-2526.pdf",
+          "mimeType": "application/pdf"
+        },
+        {
+          "name": "BRIEFING NOTE",
+          "documentType": "BRIEFING_NOTE",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb0102526_-msa-draft-1.pdf",
+          "fileName": "cidb0102526_-msa-draft-1.pdf",
+          "mimeType": "application/pdf"
+        }
+      ],
+      "sourceUrl": "https://www.cidb.org.za/cidb-tenders/current-tenders/",
+      "rawHash": "562b2ac15a1262b8bcd2cdf0715301c2a612853f4d4be337e767ad675c413ab1",
+      "rawData": {
+        "bidNumberRaw": "cidb 010 2526",
+        "dateRaw": "2025-10-24 12:17:55",
+        "descriptionRaw": "Appointment of a service provider to review, update, and align the cidb standard for uniformity in construction procurement with the Public Procurement Act",
+        "sourceUrl": "https://www.cidb.org.za/cidb-tenders/current-tenders/",
+        "documentUrls": [
+          {
+            "label": "GET BID DOCUMENT",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb-010-2526-tender-document--review-update-and-aligning-the-cidb-standard-for-uniformity-in-construction-procurement-with-the-public-procurement-act-docx.pdf"
+          },
+          {
+            "label": "BID OPENING REGISTER",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/bid-opening-register-bid-for-cidb-010-2526.pdf"
+          },
+          {
+            "label": "BRIEFING NOTE",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb0102526_-msa-draft-1.pdf"
+          }
+        ],
+        "sourceStatus": "AWARDED",
+        "sourceStatusRaw": "Awarded",
+        "sourceExtra": {
+          "sourceStatus": "AWARDED",
+          "sourceStatusRaw": "Awarded",
+          "feedStatus": "active",
+          "tenderId": "35",
+          "userId": "29",
+          "region": "1",
+          "regionName": "Tenders",
+          "rowNum": 12,
+          "bidNumberRaw": "cidb 010 2526",
+          "dateRaw": "2025-10-24 12:17:55",
+          "specificationDateTime": "2025-10-24 12:17:55",
+          "awardsDateTime": "2025-12-15 15:13:47",
+          "feedUrl": "https://www.cidb.org.za/tenders.json",
+          "pageNumber": 1
+        },
+        "inferred": {
+          "province": null,
+          "tenderType": "Works",
+          "closingDate": null
+        }
+      }
+    },
+    {
+      "externalId": "CIDB-CIDB-010-2526-2",
+      "source": "CIDB",
+      "bidNumber": "CIDB 010 2526",
+      "title": "Appointment of a service provider to review, update, and align the cidb standard for uniformity in construction procurement with the Public Procurement Act",
+      "description": "Appointment of a service provider to review, update, and align the cidb standard for uniformity in construction procurement with the Public Procurement Act",
+      "organisation": "Construction Industry Development Board",
+      "tenderType": "Works",
+      "status": "OPEN",
+      "province": null,
+      "location": null,
+      "municipality": null,
+      "publishedDate": "2025-10-24T12:17:31.000Z",
+      "closingDate": null,
+      "briefingDate": null,
+      "briefingRequired": false,
+      "briefingLocation": null,
+      "cidbGrade": null,
+      "cidbGradeRaw": null,
+      "cidbClass": [],
+      "cidbClassRaw": null,
+      "estimatedValue": null,
+      "contact": {
+        "name": null,
+        "email": null,
+        "phone": null
+      },
+      "documents": [
+        {
+          "name": "GET BID DOCUMENT",
+          "documentType": "BID_DOCUMENT",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb-010-2526-tender-document--review-update-and-aligning-the-cidb-standard-for-uniformity-in-construction-procurement-with-the-public-procurement-act-docx.pdf",
+          "fileName": "cidb-010-2526-tender-document--review-update-and-aligning-the-cidb-standard-for-uniformity-in-construction-procurement-with-the-public-procurement-act-docx.pdf",
+          "mimeType": "application/pdf"
+        },
+        {
+          "name": "BRIEFING NOTE",
+          "documentType": "BRIEFING_NOTE",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb0102526_-msa-draft.pdf",
+          "fileName": "cidb0102526_-msa-draft.pdf",
+          "mimeType": "application/pdf"
+        }
+      ],
+      "sourceUrl": "https://www.cidb.org.za/cidb-tenders/current-tenders/",
+      "rawHash": "72b9c67449e63cfc38df3021a4f78747e7f71efc118a0de8858ecf055376d88a",
+      "rawData": {
+        "bidNumberRaw": "cidb 010 2526",
+        "dateRaw": "2025-10-24 12:17:31",
+        "descriptionRaw": "Appointment of a service provider to review, update, and align the cidb standard for uniformity in construction procurement with the Public Procurement Act",
+        "sourceUrl": "https://www.cidb.org.za/cidb-tenders/current-tenders/",
+        "documentUrls": [
+          {
+            "label": "GET BID DOCUMENT",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb-010-2526-tender-document--review-update-and-aligning-the-cidb-standard-for-uniformity-in-construction-procurement-with-the-public-procurement-act-docx.pdf"
+          },
+          {
+            "label": "BRIEFING NOTE",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb0102526_-msa-draft.pdf"
+          }
+        ],
+        "sourceStatus": "OPEN",
+        "sourceStatusRaw": "Open",
+        "sourceExtra": {
+          "sourceStatus": "OPEN",
+          "sourceStatusRaw": "Open",
+          "feedStatus": "active",
+          "tenderId": "34",
+          "userId": "29",
+          "region": "1",
+          "regionName": "Tenders",
+          "rowNum": 13,
+          "bidNumberRaw": "cidb 010 2526",
+          "dateRaw": "2025-10-24 12:17:31",
+          "specificationDateTime": "2025-10-24 12:17:31",
+          "awardsDateTime": "2025-10-24 12:17:31",
+          "feedUrl": "https://www.cidb.org.za/tenders.json",
+          "pageNumber": 1
+        },
+        "inferred": {
+          "province": null,
+          "tenderType": "Works",
+          "closingDate": null
+        }
+      }
+    },
+    {
+      "externalId": "CIDB-CIDB-008-2526",
+      "source": "CIDB",
+      "bidNumber": "CIDB 008 2526",
+      "title": "Appointment of a service provider to provide email marketing solutions to drive targeted messages and campaigns to both external and internal stakeholders and to provide support for a period of 36 months.",
+      "description": "Appointment of a service provider to provide email marketing solutions to drive targeted messages and campaigns to both external and internal stakeholders and to provide support for a period of 36 months.",
+      "organisation": "Construction Industry Development Board",
+      "tenderType": "Services",
+      "status": "AWARDED",
+      "province": null,
+      "location": null,
+      "municipality": null,
+      "publishedDate": "2025-09-19T12:22:39.000Z",
+      "closingDate": null,
+      "briefingDate": null,
+      "briefingRequired": false,
+      "briefingLocation": null,
+      "cidbGrade": null,
+      "cidbGradeRaw": null,
+      "cidbClass": [],
+      "cidbClassRaw": null,
+      "estimatedValue": null,
+      "contact": {
+        "name": null,
+        "email": null,
+        "phone": null
+      },
+      "documents": [
+        {
+          "name": "GET BID DOCUMENT",
+          "documentType": "BID_DOCUMENT",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb-008-2526-tender-document--email-marketing-solution.pdf",
+          "fileName": "cidb-008-2526-tender-document--email-marketing-solution.pdf",
+          "mimeType": "application/pdf"
+        },
+        {
+          "name": "BID OPENING REGISTER",
+          "documentType": "OPENING_REGISTER",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/bid-openig-email-marketing-solutions-to-drive-targeted-messages-and-campaigns-to-both-external-and-internal-stakeholders-and-to-provide-support-for-a-period-of-36-.pdf",
+          "fileName": "bid-openig-email-marketing-solutions-to-drive-targeted-messages-and-campaigns-to-both-external-and-internal-stakeholders-and-to-provide-support-for-a-period-of-36-.pdf",
+          "mimeType": "application/pdf"
+        },
+        {
+          "name": "BRIEFING NOTE",
+          "documentType": "BRIEFING_NOTE",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb0082526_-msa-draft.pdf",
+          "fileName": "cidb0082526_-msa-draft.pdf",
+          "mimeType": "application/pdf"
+        }
+      ],
+      "sourceUrl": "https://www.cidb.org.za/cidb-tenders/current-tenders/",
+      "rawHash": "729b0194ed92db6dfad4e878f1e8bb8cedc6a94d64a7fe853d92280a22365129",
+      "rawData": {
+        "bidNumberRaw": "cidb 008 2526",
+        "dateRaw": "2025-09-19 12:22:39",
+        "descriptionRaw": "Appointment of a service provider to provide email marketing solutions to drive targeted messages and campaigns to both external and internal stakeholders and to provide support for a period of 36 months.",
+        "sourceUrl": "https://www.cidb.org.za/cidb-tenders/current-tenders/",
+        "documentUrls": [
+          {
+            "label": "GET BID DOCUMENT",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb-008-2526-tender-document--email-marketing-solution.pdf"
+          },
+          {
+            "label": "BID OPENING REGISTER",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/bid-openig-email-marketing-solutions-to-drive-targeted-messages-and-campaigns-to-both-external-and-internal-stakeholders-and-to-provide-support-for-a-period-of-36-.pdf"
+          },
+          {
+            "label": "BRIEFING NOTE",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb0082526_-msa-draft.pdf"
+          }
+        ],
+        "sourceStatus": "AWARDED",
+        "sourceStatusRaw": "Awarded",
+        "sourceExtra": {
+          "sourceStatus": "AWARDED",
+          "sourceStatusRaw": "Awarded",
+          "feedStatus": "active",
+          "tenderId": "33",
+          "userId": "29",
+          "region": "1",
+          "regionName": "Tenders",
+          "rowNum": 14,
+          "bidNumberRaw": "cidb 008 2526",
+          "dateRaw": "2025-09-19 12:22:39",
+          "specificationDateTime": "2025-09-19 12:22:39",
+          "awardsDateTime": "2025-10-24 14:31:01",
+          "feedUrl": "https://www.cidb.org.za/tenders.json",
+          "pageNumber": 1
+        },
+        "inferred": {
+          "province": null,
+          "tenderType": "Services",
+          "closingDate": null
+        }
+      }
+    },
+    {
+      "externalId": "CIDB-CIDB-007-2526",
+      "source": "CIDB",
+      "bidNumber": "CIDB 007 2526",
+      "title": "Appointment of service provider for maintenance and support of software applications for cidb for a period of three years",
+      "description": "Appointment of service provider for maintenance and support of software applications for cidb for a period of three years",
+      "organisation": "Construction Industry Development Board",
+      "tenderType": "Services",
+      "status": "AWARDED",
+      "province": null,
+      "location": null,
+      "municipality": null,
+      "publishedDate": "2025-06-26T16:38:50.000Z",
+      "closingDate": null,
+      "briefingDate": null,
+      "briefingRequired": false,
+      "briefingLocation": null,
+      "cidbGrade": null,
+      "cidbGradeRaw": null,
+      "cidbClass": [],
+      "cidbClassRaw": null,
+      "estimatedValue": null,
+      "contact": {
+        "name": null,
+        "email": null,
+        "phone": null
+      },
+      "documents": [
+        {
+          "name": "GET BID DOCUMENT",
+          "documentType": "BID_DOCUMENT",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb-007-2526-tender-document--maintenance-and-support-of-software-applications.pdf",
+          "fileName": "cidb-007-2526-tender-document--maintenance-and-support-of-software-applications.pdf",
+          "mimeType": "application/pdf"
+        },
+        {
+          "name": "BID OPENING REGISTER",
+          "documentType": "OPENING_REGISTER",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/bid-opening-register-cidb-007-2526-appointment-of-service-provider-for-maintenance-and-support-of-software-applications-for-cidb-for-a-period-of-three-years.pdf",
+          "fileName": "bid-opening-register-cidb-007-2526-appointment-of-service-provider-for-maintenance-and-support-of-software-applications-for-cidb-for-a-period-of-three-years.pdf",
+          "mimeType": "application/pdf"
+        },
+        {
+          "name": "BRIEFING NOTE",
+          "documentType": "BRIEFING_NOTE",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb0072526_-msa-draft-(1).pdf",
+          "fileName": "cidb0072526_-msa-draft-(1).pdf",
+          "mimeType": "application/pdf"
+        }
+      ],
+      "sourceUrl": "https://www.cidb.org.za/cidb-tenders/current-tenders/",
+      "rawHash": "04d208ea7712cca8ab540c53ca45ff5d9345a561f01276b53a0b11ac20c060e0",
+      "rawData": {
+        "bidNumberRaw": "cidb 007 2526",
+        "dateRaw": "2025-06-26 16:38:50",
+        "descriptionRaw": "Appointment of service provider for maintenance and support of software applications for cidb for a period of three years",
+        "sourceUrl": "https://www.cidb.org.za/cidb-tenders/current-tenders/",
+        "documentUrls": [
+          {
+            "label": "GET BID DOCUMENT",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb-007-2526-tender-document--maintenance-and-support-of-software-applications.pdf"
+          },
+          {
+            "label": "BID OPENING REGISTER",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/bid-opening-register-cidb-007-2526-appointment-of-service-provider-for-maintenance-and-support-of-software-applications-for-cidb-for-a-period-of-three-years.pdf"
+          },
+          {
+            "label": "BRIEFING NOTE",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb0072526_-msa-draft-(1).pdf"
+          }
+        ],
+        "sourceStatus": "AWARDED",
+        "sourceStatusRaw": "Awarded",
+        "sourceExtra": {
+          "sourceStatus": "AWARDED",
+          "sourceStatusRaw": "Awarded",
+          "feedStatus": "active",
+          "tenderId": "32",
+          "userId": "28",
+          "region": "1",
+          "regionName": "Tenders",
+          "rowNum": 15,
+          "bidNumberRaw": "cidb 007 2526",
+          "dateRaw": "2025-06-26 16:38:50",
+          "specificationDateTime": "2025-06-26 16:38:50",
+          "awardsDateTime": "2025-07-29 10:29:27",
+          "feedUrl": "https://www.cidb.org.za/tenders.json",
+          "pageNumber": 1
+        },
+        "inferred": {
+          "province": null,
+          "tenderType": "Services",
+          "closingDate": null
+        }
+      }
+    },
+    {
+      "externalId": "CIDB-CIDB-004-2526",
+      "source": "CIDB",
+      "bidNumber": "CIDB 004 2526",
+      "title": "Request for proposal for the purchase of suitable office accommodation for the cidb provincial office in Bloemfontein, Free State",
+      "description": "Request for proposal for the purchase of suitable office accommodation for the cidb provincial office in Bloemfontein, Free State",
+      "organisation": "Construction Industry Development Board",
+      "tenderType": null,
+      "status": "AWARDED",
+      "province": "Free State",
+      "location": null,
+      "municipality": null,
+      "publishedDate": "2025-04-11T17:21:45.000Z",
+      "closingDate": null,
+      "briefingDate": null,
+      "briefingRequired": false,
+      "briefingLocation": null,
+      "cidbGrade": null,
+      "cidbGradeRaw": null,
+      "cidbClass": [],
+      "cidbClassRaw": null,
+      "estimatedValue": null,
+      "contact": {
+        "name": null,
+        "email": null,
+        "phone": null
+      },
+      "documents": [
+        {
+          "name": "GET BID DOCUMENT",
+          "documentType": "BID_DOCUMENT",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/tender-document-purchase-of-office-accommodation-in-the-free-state-province--cidb-004-2526.pdf",
+          "fileName": "tender-document-purchase-of-office-accommodation-in-the-free-state-province--cidb-004-2526.pdf",
+          "mimeType": "application/pdf"
+        },
+        {
+          "name": "BID OPENING REGISTER",
+          "documentType": "OPENING_REGISTER",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/open-register-cidb0022526-provincial-office-in-bloemfontein.pdf",
+          "fileName": "open-register-cidb0022526-provincial-office-in-bloemfontein.pdf",
+          "mimeType": "application/pdf"
+        }
+      ],
+      "sourceUrl": "https://www.cidb.org.za/cidb-tenders/current-tenders/",
+      "rawHash": "01e806716b89ac516595b3bc765f0b525711a05e769c05c38e52a89c990b028a",
+      "rawData": {
+        "bidNumberRaw": "cidb 004 2526",
+        "dateRaw": "2025-04-11 17:21:45",
+        "descriptionRaw": "Request for proposal for the purchase of suitable office accommodation for the cidb provincial office in Bloemfontein, Free State",
+        "sourceUrl": "https://www.cidb.org.za/cidb-tenders/current-tenders/",
+        "documentUrls": [
+          {
+            "label": "GET BID DOCUMENT",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/tender-document-purchase-of-office-accommodation-in-the-free-state-province--cidb-004-2526.pdf"
+          },
+          {
+            "label": "BID OPENING REGISTER",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/open-register-cidb0022526-provincial-office-in-bloemfontein.pdf"
+          }
+        ],
+        "sourceStatus": "AWARDED",
+        "sourceStatusRaw": "Awarded",
+        "sourceExtra": {
+          "sourceStatus": "AWARDED",
+          "sourceStatusRaw": "Awarded",
+          "feedStatus": "active",
+          "tenderId": "31",
+          "userId": "28",
+          "region": "1",
+          "regionName": "Tenders",
+          "rowNum": 16,
+          "bidNumberRaw": "cidb 004 2526",
+          "dateRaw": "2025-04-11 17:21:45",
+          "specificationDateTime": "2025-04-11 17:16:29",
+          "awardsDateTime": "2025-06-11 12:20:43",
+          "feedUrl": "https://www.cidb.org.za/tenders.json",
+          "pageNumber": 1
+        },
+        "inferred": {
+          "province": "Free State",
+          "tenderType": null,
+          "closingDate": null
+        }
+      }
+    },
+    {
+      "externalId": "CIDB-CIDB-003-2526",
+      "source": "CIDB",
+      "bidNumber": "CIDB 003 2526",
+      "title": "Request for proposal for the purchase of suitable office accommodation for the cidb provincial office in Nelspruit, Mpumalanga",
+      "description": "Request for proposal for the purchase of suitable office accommodation for the cidb provincial office in Nelspruit, Mpumalanga",
+      "organisation": "Construction Industry Development Board",
+      "tenderType": null,
+      "status": "AWARDED",
+      "province": "Mpumalanga",
+      "location": null,
+      "municipality": null,
+      "publishedDate": "2025-04-11T17:14:53.000Z",
+      "closingDate": null,
+      "briefingDate": null,
+      "briefingRequired": false,
+      "briefingLocation": null,
+      "cidbGrade": null,
+      "cidbGradeRaw": null,
+      "cidbClass": [],
+      "cidbClassRaw": null,
+      "estimatedValue": null,
+      "contact": {
+        "name": null,
+        "email": null,
+        "phone": null
+      },
+      "documents": [
+        {
+          "name": "GET BID DOCUMENT",
+          "documentType": "BID_DOCUMENT",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/tender-document-purchase-of-office-accommodation-in-mpumalanga-province--cidb-003-2526.pdf",
+          "fileName": "tender-document-purchase-of-office-accommodation-in-mpumalanga-province--cidb-003-2526.pdf",
+          "mimeType": "application/pdf"
+        },
+        {
+          "name": "BID OPENING REGISTER",
+          "documentType": "OPENING_REGISTER",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/open-register-cidb0032526-office-in-nelspruit.pdf",
+          "fileName": "open-register-cidb0032526-office-in-nelspruit.pdf",
+          "mimeType": "application/pdf"
+        }
+      ],
+      "sourceUrl": "https://www.cidb.org.za/cidb-tenders/current-tenders/",
+      "rawHash": "5c027f32ddc25225c5405c7517723bafd04bade12984913e3266e4ce130d14be",
+      "rawData": {
+        "bidNumberRaw": "cidb 003 2526",
+        "dateRaw": "2025-04-11 17:14:53",
+        "descriptionRaw": "Request for proposal for the purchase of suitable office accommodation for the cidb provincial office in Nelspruit, Mpumalanga",
+        "sourceUrl": "https://www.cidb.org.za/cidb-tenders/current-tenders/",
+        "documentUrls": [
+          {
+            "label": "GET BID DOCUMENT",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/tender-document-purchase-of-office-accommodation-in-mpumalanga-province--cidb-003-2526.pdf"
+          },
+          {
+            "label": "BID OPENING REGISTER",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/open-register-cidb0032526-office-in-nelspruit.pdf"
+          }
+        ],
+        "sourceStatus": "AWARDED",
+        "sourceStatusRaw": "Awarded",
+        "sourceExtra": {
+          "sourceStatus": "AWARDED",
+          "sourceStatusRaw": "Awarded",
+          "feedStatus": "active",
+          "tenderId": "30",
+          "userId": "28",
+          "region": "1",
+          "regionName": "Tenders",
+          "rowNum": 17,
+          "bidNumberRaw": "cidb 003 2526",
+          "dateRaw": "2025-04-11 17:14:53",
+          "specificationDateTime": "2025-04-11 17:14:53",
+          "awardsDateTime": "2025-06-11 12:20:10",
+          "feedUrl": "https://www.cidb.org.za/tenders.json",
+          "pageNumber": 1
+        },
+        "inferred": {
+          "province": "Mpumalanga",
+          "tenderType": null,
+          "closingDate": null
+        }
+      }
+    },
+    {
+      "externalId": "CIDB-CIDB-002-2526",
+      "source": "CIDB",
+      "bidNumber": "CIDB 002 2526",
+      "title": "Request for proposal for the purchase of suitable office accommodation for the cidb provincial office in Durban, KwaZulu Natal",
+      "description": "Request for proposal for the purchase of suitable office accommodation for the cidb provincial office in Durban, KwaZulu Natal",
+      "organisation": "Construction Industry Development Board",
+      "tenderType": null,
+      "status": "AWARDED",
+      "province": "KwaZulu-Natal",
+      "location": null,
+      "municipality": null,
+      "publishedDate": "2025-04-11T17:13:39.000Z",
+      "closingDate": null,
+      "briefingDate": null,
+      "briefingRequired": false,
+      "briefingLocation": null,
+      "cidbGrade": null,
+      "cidbGradeRaw": null,
+      "cidbClass": [],
+      "cidbClassRaw": null,
+      "estimatedValue": null,
+      "contact": {
+        "name": null,
+        "email": null,
+        "phone": null
+      },
+      "documents": [
+        {
+          "name": "GET BID DOCUMENT",
+          "documentType": "BID_DOCUMENT",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/tender-document-purchase-of-office-accommodation-in-kwazulu-natal-province--cidb-002-2526.pdf",
+          "fileName": "tender-document-purchase-of-office-accommodation-in-kwazulu-natal-province--cidb-002-2526.pdf",
+          "mimeType": "application/pdf"
+        },
+        {
+          "name": "BID OPENING REGISTER",
+          "documentType": "OPENING_REGISTER",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/open-register-cidb0022526-office-in-durban.pdf",
+          "fileName": "open-register-cidb0022526-office-in-durban.pdf",
+          "mimeType": "application/pdf"
+        }
+      ],
+      "sourceUrl": "https://www.cidb.org.za/cidb-tenders/current-tenders/",
+      "rawHash": "a3832dd504f05234c5b60a3af02aefa3f92fb4288a149f0fc67a3303aca14514",
+      "rawData": {
+        "bidNumberRaw": "cidb 002 2526",
+        "dateRaw": "2025-04-11 17:13:39",
+        "descriptionRaw": "Request for proposal for the purchase of suitable office accommodation for the cidb provincial office in Durban, KwaZulu Natal",
+        "sourceUrl": "https://www.cidb.org.za/cidb-tenders/current-tenders/",
+        "documentUrls": [
+          {
+            "label": "GET BID DOCUMENT",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/tender-document-purchase-of-office-accommodation-in-kwazulu-natal-province--cidb-002-2526.pdf"
+          },
+          {
+            "label": "BID OPENING REGISTER",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/open-register-cidb0022526-office-in-durban.pdf"
+          }
+        ],
+        "sourceStatus": "AWARDED",
+        "sourceStatusRaw": "Awarded",
+        "sourceExtra": {
+          "sourceStatus": "AWARDED",
+          "sourceStatusRaw": "Awarded",
+          "feedStatus": "active",
+          "tenderId": "29",
+          "userId": "28",
+          "region": "1",
+          "regionName": "Tenders",
+          "rowNum": 18,
+          "bidNumberRaw": "cidb 002 2526",
+          "dateRaw": "2025-04-11 17:13:39",
+          "specificationDateTime": "2025-04-11 17:13:39",
+          "awardsDateTime": "2025-06-11 12:18:03",
+          "feedUrl": "https://www.cidb.org.za/tenders.json",
+          "pageNumber": 1
+        },
+        "inferred": {
+          "province": "KwaZulu-Natal",
+          "tenderType": null,
+          "closingDate": null
+        }
+      }
+    },
+    {
+      "externalId": "CIDB-CIDB-001-2526",
+      "source": "CIDB",
+      "bidNumber": "CIDB 001 2526",
+      "title": "Request for proposal for the purchase of suitable office accommodation for the cidb provincial office in East London, Eastern Cape",
+      "description": "Request for proposal for the purchase of suitable office accommodation for the cidb provincial office in East London, Eastern Cape",
+      "organisation": "Construction Industry Development Board",
+      "tenderType": null,
+      "status": "AWARDED",
+      "province": "Eastern Cape",
+      "location": null,
+      "municipality": null,
+      "publishedDate": "2025-04-11T17:11:53.000Z",
+      "closingDate": null,
+      "briefingDate": null,
+      "briefingRequired": false,
+      "briefingLocation": null,
+      "cidbGrade": null,
+      "cidbGradeRaw": null,
+      "cidbClass": [],
+      "cidbClassRaw": null,
+      "estimatedValue": null,
+      "contact": {
+        "name": null,
+        "email": null,
+        "phone": null
+      },
+      "documents": [
+        {
+          "name": "GET BID DOCUMENT",
+          "documentType": "BID_DOCUMENT",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/tender-document-purchase-of-office-accommodation-in-the-eastern-cape-province--cidb-001-2526.pdf",
+          "fileName": "tender-document-purchase-of-office-accommodation-in-the-eastern-cape-province--cidb-001-2526.pdf",
+          "mimeType": "application/pdf"
+        },
+        {
+          "name": "BID OPENING REGISTER",
+          "documentType": "OPENING_REGISTER",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/open-register-cidb0012526-east-london.pdf",
+          "fileName": "open-register-cidb0012526-east-london.pdf",
+          "mimeType": "application/pdf"
+        }
+      ],
+      "sourceUrl": "https://www.cidb.org.za/cidb-tenders/current-tenders/",
+      "rawHash": "d935a6d7aa626b8c3bba4e26473aa3459c9ef85ebefdbd775cd04a7747bb53cb",
+      "rawData": {
+        "bidNumberRaw": "cidb 001 2526",
+        "dateRaw": "2025-04-11 17:11:53",
+        "descriptionRaw": "Request for proposal for the purchase of suitable office accommodation for the cidb provincial office in East London, Eastern Cape",
+        "sourceUrl": "https://www.cidb.org.za/cidb-tenders/current-tenders/",
+        "documentUrls": [
+          {
+            "label": "GET BID DOCUMENT",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/tender-document-purchase-of-office-accommodation-in-the-eastern-cape-province--cidb-001-2526.pdf"
+          },
+          {
+            "label": "BID OPENING REGISTER",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/open-register-cidb0012526-east-london.pdf"
+          }
+        ],
+        "sourceStatus": "AWARDED",
+        "sourceStatusRaw": "Awarded",
+        "sourceExtra": {
+          "sourceStatus": "AWARDED",
+          "sourceStatusRaw": "Awarded",
+          "feedStatus": "active",
+          "tenderId": "28",
+          "userId": "28",
+          "region": "1",
+          "regionName": "Tenders",
+          "rowNum": 19,
+          "bidNumberRaw": "cidb 001 2526",
+          "dateRaw": "2025-04-11 17:11:53",
+          "specificationDateTime": "2025-04-11 17:11:53",
+          "awardsDateTime": "2025-06-11 12:17:25",
+          "feedUrl": "https://www.cidb.org.za/tenders.json",
+          "pageNumber": 1
+        },
+        "inferred": {
+          "province": "Eastern Cape",
+          "tenderType": null,
+          "closingDate": null
+        }
+      }
+    },
+    {
+      "externalId": "CIDB-CIDB-020-2425",
+      "source": "CIDB",
+      "bidNumber": "CIDB 020 2425",
+      "title": "Appointment of service provider to provide physical guarding and emergency response services for a period of 36",
+      "description": "Appointment of service provider to provide physical guarding and emergency response services for a period of 36",
+      "organisation": "Construction Industry Development Board",
+      "tenderType": "Services",
+      "status": "AWARDED",
+      "province": null,
+      "location": null,
+      "municipality": null,
+      "publishedDate": "2024-12-13T16:35:05.000Z",
+      "closingDate": null,
+      "briefingDate": null,
+      "briefingRequired": false,
+      "briefingLocation": null,
+      "cidbGrade": null,
+      "cidbGradeRaw": null,
+      "cidbClass": [],
+      "cidbClassRaw": null,
+      "estimatedValue": null,
+      "contact": {
+        "name": null,
+        "email": null,
+        "phone": null
+      },
+      "documents": [
+        {
+          "name": "GET BID DOCUMENT",
+          "documentType": "BID_DOCUMENT",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb-020-2425--appointment-of-service-provider-for-provision-of-physical-guarding-and-emergency-response-services.pdf",
+          "fileName": "cidb-020-2425--appointment-of-service-provider-for-provision-of-physical-guarding-and-emergency-response-services.pdf",
+          "mimeType": "application/pdf"
+        },
+        {
+          "name": "GET ADDENDUM",
+          "documentType": "ADDENDUM",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/briefing-note-1-_addendum-cidb-020-2425.pdf",
+          "fileName": "briefing-note-1-_addendum-cidb-020-2425.pdf",
+          "mimeType": "application/pdf"
+        },
+        {
+          "name": "BID OPENING REGISTER",
+          "documentType": "OPENING_REGISTER",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/bid-opening-register-for-appointment-of-a-service-provider-to-provide-physical-guarding-and-emergency-response-for-a-period-of-36-months.pdf",
+          "fileName": "bid-opening-register-for-appointment-of-a-service-provider-to-provide-physical-guarding-and-emergency-response-for-a-period-of-36-months.pdf",
+          "mimeType": "application/pdf"
+        },
+        {
+          "name": "BRIEFING NOTE",
+          "documentType": "BRIEFING_NOTE",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb0202425_-msa-draft.pdf",
+          "fileName": "cidb0202425_-msa-draft.pdf",
+          "mimeType": "application/pdf"
+        }
+      ],
+      "sourceUrl": "https://www.cidb.org.za/cidb-tenders/current-tenders/",
+      "rawHash": "d972bbb3ff2bc8867f43d5e298498b2461cd3b0e1762e0106fd8a1013f7dfe7f",
+      "rawData": {
+        "bidNumberRaw": "cidb 020 2425",
+        "dateRaw": "2024-12-13 16:35:05",
+        "descriptionRaw": "Appointment of service provider to provide physical guarding and emergency response services for a period of 36",
+        "sourceUrl": "https://www.cidb.org.za/cidb-tenders/current-tenders/",
+        "documentUrls": [
+          {
+            "label": "GET BID DOCUMENT",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb-020-2425--appointment-of-service-provider-for-provision-of-physical-guarding-and-emergency-response-services.pdf"
+          },
+          {
+            "label": "GET ADDENDUM",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/briefing-note-1-_addendum-cidb-020-2425.pdf"
+          },
+          {
+            "label": "BID OPENING REGISTER",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/bid-opening-register-for-appointment-of-a-service-provider-to-provide-physical-guarding-and-emergency-response-for-a-period-of-36-months.pdf"
+          },
+          {
+            "label": "BRIEFING NOTE",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb0202425_-msa-draft.pdf"
+          }
+        ],
+        "sourceStatus": "AWARDED",
+        "sourceStatusRaw": "Awarded",
+        "sourceExtra": {
+          "sourceStatus": "AWARDED",
+          "sourceStatusRaw": "Awarded",
+          "feedStatus": "active",
+          "tenderId": "26",
+          "userId": "28",
+          "region": "1",
+          "regionName": "Tenders",
+          "rowNum": 20,
+          "bidNumberRaw": "cidb 020 2425",
+          "dateRaw": "2024-12-13 16:35:05",
+          "specificationDateTime": "2025-01-20 17:10:16",
+          "awardsDateTime": "2025-01-27 13:12:36",
+          "feedUrl": "https://www.cidb.org.za/tenders.json",
+          "pageNumber": 1
+        },
+        "inferred": {
+          "province": null,
+          "tenderType": "Services",
+          "closingDate": null
+        }
+      }
+    },
+    {
+      "externalId": "CIDB-CIDB-019-2425",
+      "source": "CIDB",
+      "bidNumber": "CIDB 019 2425",
+      "title": "Appointment of a panel of service providers to render software development and major enhancements for a period of 36 months",
+      "description": "Appointment of a panel of service providers to render software development and major enhancements for a period of 36 months",
+      "organisation": "Construction Industry Development Board",
+      "tenderType": "Services",
+      "status": "AWARDED",
+      "province": null,
+      "location": null,
+      "municipality": null,
+      "publishedDate": "2024-12-13T16:30:10.000Z",
+      "closingDate": null,
+      "briefingDate": null,
+      "briefingRequired": false,
+      "briefingLocation": null,
+      "cidbGrade": null,
+      "cidbGradeRaw": null,
+      "cidbClass": [],
+      "cidbClassRaw": null,
+      "estimatedValue": null,
+      "contact": {
+        "name": null,
+        "email": null,
+        "phone": null
+      },
+      "documents": [
+        {
+          "name": "GET BID DOCUMENT",
+          "documentType": "BID_DOCUMENT",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb-019-2425--panel-of-software-developers.pdf",
+          "fileName": "cidb-019-2425--panel-of-software-developers.pdf",
+          "mimeType": "application/pdf"
+        },
+        {
+          "name": "GET ADDENDUM",
+          "documentType": "ADDENDUM",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/briefing-note-1-_addendum-cidb-019-2425.pdf",
+          "fileName": "briefing-note-1-_addendum-cidb-019-2425.pdf",
+          "mimeType": "application/pdf"
+        },
+        {
+          "name": "BID OPENING REGISTER",
+          "documentType": "OPENING_REGISTER",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/bid-opening-register-appointment-of-a-panel-of-service-providers-to-render-software-development-and-major-enhancements-for-a-period-of-36-months-cidb0192425.pdf",
+          "fileName": "bid-opening-register-appointment-of-a-panel-of-service-providers-to-render-software-development-and-major-enhancements-for-a-period-of-36-months-cidb0192425.pdf",
+          "mimeType": "application/pdf"
+        },
+        {
+          "name": "BRIEFING NOTE",
+          "documentType": "BRIEFING_NOTE",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb0192425_-msa-draft.pdf",
+          "fileName": "cidb0192425_-msa-draft.pdf",
+          "mimeType": "application/pdf"
+        }
+      ],
+      "sourceUrl": "https://www.cidb.org.za/cidb-tenders/current-tenders/",
+      "rawHash": "1e3d94c5117409f95b0fdef5d26c7c73daa5e6d27fa86ed0bbbb40cbb237778f",
+      "rawData": {
+        "bidNumberRaw": "cidb 019 2425",
+        "dateRaw": "2024-12-13 16:30:10",
+        "descriptionRaw": "Appointment of a panel of service providers to render software development and major enhancements for a period of 36 months",
+        "sourceUrl": "https://www.cidb.org.za/cidb-tenders/current-tenders/",
+        "documentUrls": [
+          {
+            "label": "GET BID DOCUMENT",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb-019-2425--panel-of-software-developers.pdf"
+          },
+          {
+            "label": "GET ADDENDUM",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/briefing-note-1-_addendum-cidb-019-2425.pdf"
+          },
+          {
+            "label": "BID OPENING REGISTER",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/bid-opening-register-appointment-of-a-panel-of-service-providers-to-render-software-development-and-major-enhancements-for-a-period-of-36-months-cidb0192425.pdf"
+          },
+          {
+            "label": "BRIEFING NOTE",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb0192425_-msa-draft.pdf"
+          }
+        ],
+        "sourceStatus": "AWARDED",
+        "sourceStatusRaw": "Awarded",
+        "sourceExtra": {
+          "sourceStatus": "AWARDED",
+          "sourceStatusRaw": "Awarded",
+          "feedStatus": "active",
+          "tenderId": "25",
+          "userId": "28",
+          "region": "1",
+          "regionName": "Tenders",
+          "rowNum": 21,
+          "bidNumberRaw": "cidb 019 2425",
+          "dateRaw": "2024-12-13 16:30:10",
+          "specificationDateTime": "2025-01-17 16:22:14",
+          "awardsDateTime": "2025-02-04 17:59:41",
+          "feedUrl": "https://www.cidb.org.za/tenders.json",
+          "pageNumber": 1
+        },
+        "inferred": {
+          "province": null,
+          "tenderType": "Services",
+          "closingDate": null
+        }
+      }
+    },
+    {
+      "externalId": "CIDB-CIDB-017-2425",
+      "source": "CIDB",
+      "bidNumber": "CIDB 017 2425",
+      "title": "Appointment of a professional short-term insurance broker to manage the short-term insurance portfolio of the construction industry development broad for a period of thirty six months.",
+      "description": "Appointment of a professional short-term insurance broker to manage the short-term insurance portfolio of the construction industry development broad for a period of thirty six months.",
+      "organisation": "Construction Industry Development Board",
+      "tenderType": "Works",
+      "status": "AWARDED",
+      "province": null,
+      "location": null,
+      "municipality": null,
+      "publishedDate": "2024-12-13T16:28:43.000Z",
+      "closingDate": null,
+      "briefingDate": null,
+      "briefingRequired": false,
+      "briefingLocation": null,
+      "cidbGrade": null,
+      "cidbGradeRaw": null,
+      "cidbClass": [],
+      "cidbClassRaw": null,
+      "estimatedValue": null,
+      "contact": {
+        "name": null,
+        "email": null,
+        "phone": null
+      },
+      "documents": [
+        {
+          "name": "GET BID DOCUMENT",
+          "documentType": "BID_DOCUMENT",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb-017-2425-appointment-of-a-service-provider-to-render-short-term-insurance-brokerage-services.pdf",
+          "fileName": "cidb-017-2425-appointment-of-a-service-provider-to-render-short-term-insurance-brokerage-services.pdf",
+          "mimeType": "application/pdf"
+        },
+        {
+          "name": "BID OPENING REGISTER",
+          "documentType": "OPENING_REGISTER",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/bid-opening-register-cidb-017-2425-appointment-of-a-professional-short-term-insurance-broker-to-manage-the-short-term-insurance-portfolio-of-the-construction-industry(1).pdf",
+          "fileName": "bid-opening-register-cidb-017-2425-appointment-of-a-professional-short-term-insurance-broker-to-manage-the-short-term-insurance-portfolio-of-the-construction-industry(1).pdf",
+          "mimeType": "application/pdf"
+        },
+        {
+          "name": "BRIEFING NOTE",
+          "documentType": "BRIEFING_NOTE",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb0172425_-msa-draft-1.pdf",
+          "fileName": "cidb0172425_-msa-draft-1.pdf",
+          "mimeType": "application/pdf"
+        }
+      ],
+      "sourceUrl": "https://www.cidb.org.za/cidb-tenders/current-tenders/",
+      "rawHash": "59be6404d8b17883b0e4eecd4c90b280d12b30c2eb82b0676d916c3c581ed4e7",
+      "rawData": {
+        "bidNumberRaw": "cidb 017 2425",
+        "dateRaw": "2024-12-13 16:28:43",
+        "descriptionRaw": "Appointment of a professional short-term insurance broker to manage the short-term insurance portfolio of the construction industry development broad for a period of thirty six months.",
+        "sourceUrl": "https://www.cidb.org.za/cidb-tenders/current-tenders/",
+        "documentUrls": [
+          {
+            "label": "GET BID DOCUMENT",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb-017-2425-appointment-of-a-service-provider-to-render-short-term-insurance-brokerage-services.pdf"
+          },
+          {
+            "label": "BID OPENING REGISTER",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/bid-opening-register-cidb-017-2425-appointment-of-a-professional-short-term-insurance-broker-to-manage-the-short-term-insurance-portfolio-of-the-construction-industry(1).pdf"
+          },
+          {
+            "label": "BRIEFING NOTE",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb0172425_-msa-draft-1.pdf"
+          }
+        ],
+        "sourceStatus": "AWARDED",
+        "sourceStatusRaw": "Awarded",
+        "sourceExtra": {
+          "sourceStatus": "AWARDED",
+          "sourceStatusRaw": "Awarded",
+          "feedStatus": "active",
+          "tenderId": "16",
+          "userId": "28",
+          "region": "1",
+          "regionName": "Tenders",
+          "rowNum": 22,
+          "bidNumberRaw": "cidb 017 2425",
+          "dateRaw": "2024-12-13 16:28:43",
+          "specificationDateTime": "2024-12-13 16:28:43",
+          "awardsDateTime": "2025-01-21 16:56:37",
+          "feedUrl": "https://www.cidb.org.za/tenders.json",
+          "pageNumber": 1
+        },
+        "inferred": {
+          "province": null,
+          "tenderType": "Works",
+          "closingDate": null
+        }
+      }
+    },
+    {
+      "externalId": "CIDB-CIDB-016-2425",
+      "source": "CIDB",
+      "bidNumber": "CIDB 016 2425",
+      "title": "Request for proposal for the purchase of suitable office accommodation for the cidb provincial office in Bloemfontein, Free State",
+      "description": "Request for proposal for the purchase of suitable office accommodation for the cidb provincial office in Bloemfontein, Free State",
+      "organisation": "Construction Industry Development Board",
+      "tenderType": null,
+      "status": "CLOSED",
+      "province": "Free State",
+      "location": null,
+      "municipality": null,
+      "publishedDate": "2024-12-13T16:27:08.000Z",
+      "closingDate": null,
+      "briefingDate": null,
+      "briefingRequired": false,
+      "briefingLocation": null,
+      "cidbGrade": null,
+      "cidbGradeRaw": null,
+      "cidbClass": [],
+      "cidbClassRaw": null,
+      "estimatedValue": null,
+      "contact": {
+        "name": null,
+        "email": null,
+        "phone": null
+      },
+      "documents": [
+        {
+          "name": "GET BID DOCUMENT",
+          "documentType": "BID_DOCUMENT",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb-016-2425-tender-document-purchase-of-office-accommodation-in-the-free-state-province.pdf",
+          "fileName": "cidb-016-2425-tender-document-purchase-of-office-accommodation-in-the-free-state-province.pdf",
+          "mimeType": "application/pdf"
+        },
+        {
+          "name": "GET ADDENDUM",
+          "documentType": "ADDENDUM",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/briefing-note-1-_addendum-cidb-016-2425.pdf",
+          "fileName": "briefing-note-1-_addendum-cidb-016-2425.pdf",
+          "mimeType": "application/pdf"
+        }
+      ],
+      "sourceUrl": "https://www.cidb.org.za/cidb-tenders/current-tenders/",
+      "rawHash": "f014e02e98368af41c4a1dfb09a214d9f9c68fb1507d485cd9427aaec3200351",
+      "rawData": {
+        "bidNumberRaw": "cidb 016 2425",
+        "dateRaw": "2024-12-13 16:27:08",
+        "descriptionRaw": "Request for proposal for the purchase of suitable office accommodation for the cidb provincial office in Bloemfontein, Free State",
+        "sourceUrl": "https://www.cidb.org.za/cidb-tenders/current-tenders/",
+        "documentUrls": [
+          {
+            "label": "GET BID DOCUMENT",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb-016-2425-tender-document-purchase-of-office-accommodation-in-the-free-state-province.pdf"
+          },
+          {
+            "label": "GET ADDENDUM",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/briefing-note-1-_addendum-cidb-016-2425.pdf"
+          }
+        ],
+        "sourceStatus": "CLOSED",
+        "sourceStatusRaw": "Closed",
+        "sourceExtra": {
+          "sourceStatus": "CLOSED",
+          "sourceStatusRaw": "Closed",
+          "feedStatus": "active",
+          "tenderId": "24",
+          "userId": "28",
+          "region": "1",
+          "regionName": "Tenders",
+          "rowNum": 23,
+          "bidNumberRaw": "cidb 016 2425",
+          "dateRaw": "2024-12-13 16:27:08",
+          "specificationDateTime": "2025-01-21 09:28:27",
+          "awardsDateTime": "2024-12-13 16:27:08",
+          "feedUrl": "https://www.cidb.org.za/tenders.json",
+          "pageNumber": 1
+        },
+        "inferred": {
+          "province": "Free State",
+          "tenderType": null,
+          "closingDate": null
+        }
+      }
+    },
+    {
+      "externalId": "CIDB-CIDB-015-2425",
+      "source": "CIDB",
+      "bidNumber": "CIDB 015 2425",
+      "title": "Request for proposal for the purchase of suitable office accommodation for the cidb provincial office in Durban, Kwa-Zulu Natal",
+      "description": "Request for proposal for the purchase of suitable office accommodation for the cidb provincial office in Durban, Kwa-Zulu Natal",
+      "organisation": "Construction Industry Development Board",
+      "tenderType": null,
+      "status": "CLOSED",
+      "province": "KwaZulu-Natal",
+      "location": null,
+      "municipality": null,
+      "publishedDate": "2024-12-13T16:25:16.000Z",
+      "closingDate": null,
+      "briefingDate": null,
+      "briefingRequired": false,
+      "briefingLocation": null,
+      "cidbGrade": null,
+      "cidbGradeRaw": null,
+      "cidbClass": [],
+      "cidbClassRaw": null,
+      "estimatedValue": null,
+      "contact": {
+        "name": null,
+        "email": null,
+        "phone": null
+      },
+      "documents": [
+        {
+          "name": "GET BID DOCUMENT",
+          "documentType": "BID_DOCUMENT",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb-015-2425-tender-document-purchase-of-office-accommodation-in-the-kwa-zulu-natal-province.pdf",
+          "fileName": "cidb-015-2425-tender-document-purchase-of-office-accommodation-in-the-kwa-zulu-natal-province.pdf",
+          "mimeType": "application/pdf"
+        },
+        {
+          "name": "GET ADDENDUM",
+          "documentType": "ADDENDUM",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/briefing-note-1-_addendum-cidb-015-2425.pdf",
+          "fileName": "briefing-note-1-_addendum-cidb-015-2425.pdf",
+          "mimeType": "application/pdf"
+        }
+      ],
+      "sourceUrl": "https://www.cidb.org.za/cidb-tenders/current-tenders/",
+      "rawHash": "00ccd24f7fb51420cfca25d47e3eeaff8fa21b673c24af9a0f4d016aefdf0f13",
+      "rawData": {
+        "bidNumberRaw": "cidb 015 2425",
+        "dateRaw": "2024-12-13 16:25:16",
+        "descriptionRaw": "Request for proposal for the purchase of suitable office accommodation for the cidb provincial office in Durban, Kwa-Zulu Natal",
+        "sourceUrl": "https://www.cidb.org.za/cidb-tenders/current-tenders/",
+        "documentUrls": [
+          {
+            "label": "GET BID DOCUMENT",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb-015-2425-tender-document-purchase-of-office-accommodation-in-the-kwa-zulu-natal-province.pdf"
+          },
+          {
+            "label": "GET ADDENDUM",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/briefing-note-1-_addendum-cidb-015-2425.pdf"
+          }
+        ],
+        "sourceStatus": "CLOSED",
+        "sourceStatusRaw": "Closed",
+        "sourceExtra": {
+          "sourceStatus": "CLOSED",
+          "sourceStatusRaw": "Closed",
+          "feedStatus": "active",
+          "tenderId": "23",
+          "userId": "28",
+          "region": "1",
+          "regionName": "Tenders",
+          "rowNum": 24,
+          "bidNumberRaw": "cidb 015 2425",
+          "dateRaw": "2024-12-13 16:25:16",
+          "specificationDateTime": "2025-01-21 09:26:20",
+          "awardsDateTime": "2024-12-13 16:25:16",
+          "feedUrl": "https://www.cidb.org.za/tenders.json",
+          "pageNumber": 1
+        },
+        "inferred": {
+          "province": "KwaZulu-Natal",
+          "tenderType": null,
+          "closingDate": null
+        }
+      }
+    },
+    {
+      "externalId": "CIDB-CIDB-014-2425",
+      "source": "CIDB",
+      "bidNumber": "CIDB 014 2425",
+      "title": "Request for proposal for the purchase of suitable office accommodation for the cidb provincial office in Nelspruit, Mpumalanga",
+      "description": "Request for proposal for the purchase of suitable office accommodation for the cidb provincial office in Nelspruit, Mpumalanga",
+      "organisation": "Construction Industry Development Board",
+      "tenderType": null,
+      "status": "AWARDED",
+      "province": "Mpumalanga",
+      "location": null,
+      "municipality": null,
+      "publishedDate": "2024-12-13T16:23:10.000Z",
+      "closingDate": null,
+      "briefingDate": null,
+      "briefingRequired": false,
+      "briefingLocation": null,
+      "cidbGrade": null,
+      "cidbGradeRaw": null,
+      "cidbClass": [],
+      "cidbClassRaw": null,
+      "estimatedValue": null,
+      "contact": {
+        "name": null,
+        "email": null,
+        "phone": null
+      },
+      "documents": [
+        {
+          "name": "GET BID DOCUMENT",
+          "documentType": "BID_DOCUMENT",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb-014-2425-tender-document-purchase-of-office-accommodation-in-the-mpumalanga-province.pdf",
+          "fileName": "cidb-014-2425-tender-document-purchase-of-office-accommodation-in-the-mpumalanga-province.pdf",
+          "mimeType": "application/pdf"
+        },
+        {
+          "name": "GET ADDENDUM",
+          "documentType": "ADDENDUM",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/briefing-note-1-_addendum-cidb-014-2425.pdf",
+          "fileName": "briefing-note-1-_addendum-cidb-014-2425.pdf",
+          "mimeType": "application/pdf"
+        },
+        {
+          "name": "BID OPENING REGISTER",
+          "documentType": "OPENING_REGISTER",
+          "url": "https://www.cidb.org.za/wp-content/tender-uploads/bid-opening-register-request-for-proposal-for-the-purchase-of-suitable-office-accommodation-for-the-cidb-provincial-office-in-nelspruit-mpumalanga_.pdf",
+          "fileName": "bid-opening-register-request-for-proposal-for-the-purchase-of-suitable-office-accommodation-for-the-cidb-provincial-office-in-nelspruit-mpumalanga_.pdf",
+          "mimeType": "application/pdf"
+        }
+      ],
+      "sourceUrl": "https://www.cidb.org.za/cidb-tenders/current-tenders/",
+      "rawHash": "4ae9df21a1cfbc5e342455db7cfe71db6ac97396924be1a95a6311276be93bf8",
+      "rawData": {
+        "bidNumberRaw": "cidb 014 2425",
+        "dateRaw": "2024-12-13 16:23:10",
+        "descriptionRaw": "Request for proposal for the purchase of suitable office accommodation for the cidb provincial office in Nelspruit, Mpumalanga",
+        "sourceUrl": "https://www.cidb.org.za/cidb-tenders/current-tenders/",
+        "documentUrls": [
+          {
+            "label": "GET BID DOCUMENT",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/cidb-014-2425-tender-document-purchase-of-office-accommodation-in-the-mpumalanga-province.pdf"
+          },
+          {
+            "label": "GET ADDENDUM",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/briefing-note-1-_addendum-cidb-014-2425.pdf"
+          },
+          {
+            "label": "BID OPENING REGISTER",
+            "url": "https://www.cidb.org.za/wp-content/tender-uploads/bid-opening-register-request-for-proposal-for-the-purchase-of-suitable-office-accommodation-for-the-cidb-provincial-office-in-nelspruit-mpumalanga_.pdf"
+          }
+        ],
+        "sourceStatus": "AWARDED",
+        "sourceStatusRaw": "Awarded",
+        "sourceExtra": {
+          "sourceStatus": "AWARDED",
+          "sourceStatusRaw": "Awarded",
+          "feedStatus": "active",
+          "tenderId": "22",
+          "userId": "28",
+          "region": "1",
+          "regionName": "Tenders",
+          "rowNum": 25,
+          "bidNumberRaw": "cidb 014 2425",
+          "dateRaw": "2024-12-13 16:23:10",
+          "specificationDateTime": "2025-01-21 09:26:55",
+          "awardsDateTime": "2025-01-30 10:33:40",
+          "feedUrl": "https://www.cidb.org.za/tenders.json",
+          "pageNumber": 1
+        },
+        "inferred": {
+          "province": "Mpumalanga",
+          "tenderType": null,
+          "closingDate": null
+        }
+      }
+    }
+  ]
+}

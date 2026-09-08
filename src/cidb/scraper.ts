@@ -10,10 +10,24 @@ export interface FetchOptions {
   userAgent?: string;
   /** Polite delay applied before the request (ms). */
   delayMs?: number;
+  /**
+   * Reject responses smaller than this many bytes (default 500) — a truncated or
+   * blocked page is a source failure, not an empty result. Set to 0 when a small
+   * body is a legitimate answer (robots.txt, an empty feed, diagnostics).
+   */
+  minBytes?: number;
 }
 
 export interface FetchResult {
   html: string;
+  status: number;
+  finalUrl: string;
+  attempts: number;
+}
+
+export interface FetchJsonResult {
+  json: unknown;
+  raw: string;
   status: number;
   finalUrl: string;
   attempts: number;
@@ -39,6 +53,7 @@ export async function fetchHtml(url: string, options: FetchOptions = {}): Promis
     baseDelayMs = config.RETRY_BASE_DELAY_MS,
     userAgent = config.CIDB_USER_AGENT,
     delayMs = 0,
+    minBytes = 500,
   } = options;
 
   if (delayMs > 0) await sleep(delayMs);
@@ -69,7 +84,7 @@ export async function fetchHtml(url: string, options: FetchOptions = {}): Promis
           throw httpError(response.status, url);
         }
         const text = await response.text();
-        if (!text || text.length < 500) {
+        if (text.length < minBytes || (minBytes > 0 && !text)) {
           throw new SourceRequestError(`CIDB returned a suspiciously small response (${text.length} bytes) for ${url}`);
         }
         return text;
@@ -111,4 +126,26 @@ export async function fetchHtml(url: string, options: FetchOptions = {}): Promis
   );
 
   return { html, status: 200, finalUrl: url, attempts };
+}
+
+/**
+ * Polite JSON fetch for the machine-readable CIDB feed (tenders.json).
+ *
+ * Same guarantees as fetchHtml — descriptive User-Agent, timeout, retry with
+ * exponential backoff — plus a parse guard: a feed that stops being valid JSON
+ * is a source-structure change, not an empty result.
+ */
+export async function fetchJson(url: string, options: FetchOptions = {}): Promise<FetchJsonResult> {
+  const result = await fetchHtml(url, options);
+  let json: unknown;
+  try {
+    json = JSON.parse(result.html) as unknown;
+  } catch (error) {
+    throw new SourceRequestError(
+      `SOURCE_STRUCTURE_CHANGED: ${url} did not return valid JSON (${
+        error instanceof Error ? error.message : String(error)
+      })`,
+    );
+  }
+  return { json, raw: result.html, status: result.status, finalUrl: result.finalUrl, attempts: result.attempts };
 }

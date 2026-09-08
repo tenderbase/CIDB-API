@@ -16,13 +16,27 @@ import {
   searchQuerySchema,
   tenderListQuerySchema,
 } from '../../schemas/query.js';
-import { errorSchema, tenderListResponseSchema, tenderResponseSchema } from '../../schemas/responses.js';
+import {
+  authedErrorResponses,
+  badRequestErrorSchema,
+  notFoundErrorSchema,
+  tenderListOkSchema,
+  tenderOkSchema,
+} from '../../schemas/responses.js';
 import { errorEnvelope } from '../app.js';
 
-const idParam = z.object({ id: z.string().min(1).max(100) });
-const provinceParam = z.object({ province: z.string().min(1).max(100) });
-const gradeParam = z.object({ grade: z.string().min(1).max(20) });
-const classParam = z.object({ class: z.string().min(1).max(20) });
+const idParam = z.object({
+  id: z.string().min(1).max(100).describe('Internal tender id or the stable externalId (e.g. CIDB-CIDB-004-2627).'),
+});
+const provinceParam = z.object({
+  province: z.string().min(1).max(100).describe('Province name, case-insensitive (e.g. Gauteng).'),
+});
+const gradeParam = z.object({
+  grade: z.string().min(1).max(20).describe('CIDB contractor grade (e.g. 6 or 5-7).'),
+});
+const classParam = z.object({
+  class: z.string().min(1).max(20).describe('CIDB class of works code (e.g. GB, CE, ME).'),
+});
 
 export async function registerTenderRoutes(app: FastifyInstance): Promise<void> {
   const r = app.withTypeProvider<ZodTypeProvider>();
@@ -33,10 +47,16 @@ export async function registerTenderRoutes(app: FastifyInstance): Promise<void> 
     {
       schema: {
         tags: ['tenders'],
+        summary: 'List tenders',
+        operationId: 'listTenders',
         description: 'List tenders with search, filters, sorting and pagination.',
         security: [{ apiKey: [] }],
         querystring: tenderListQuerySchema,
-        response: { 200: tenderListResponseSchema, 400: errorSchema, 401: errorSchema },
+        response: {
+          200: tenderListOkSchema,
+          400: badRequestErrorSchema,
+          ...authedErrorResponses,
+        },
       },
     },
     async (request) => listTenders(request.query),
@@ -47,10 +67,16 @@ export async function registerTenderRoutes(app: FastifyInstance): Promise<void> 
     {
       schema: {
         tags: ['tenders'],
+        summary: 'Search tenders',
+        operationId: 'searchTenders',
         description: 'Full-text style search across bid number, title, description, organisation and location.',
         security: [{ apiKey: [] }],
         querystring: searchQuerySchema,
-        response: { 200: tenderListResponseSchema, 400: errorSchema, 401: errorSchema },
+        response: {
+          200: tenderListOkSchema,
+          400: badRequestErrorSchema,
+          ...authedErrorResponses,
+        },
       },
     },
     async (request) => {
@@ -70,10 +96,16 @@ export async function registerTenderRoutes(app: FastifyInstance): Promise<void> 
     {
       schema: {
         tags: ['tenders'],
+        summary: 'Tenders closing soon',
+        operationId: 'listClosingSoonTenders',
         description: 'Open tenders with a closing date within the next N days.',
         security: [{ apiKey: [] }],
         querystring: closingSoonQuerySchema,
-        response: { 200: tenderListResponseSchema, 400: errorSchema, 401: errorSchema },
+        response: {
+          200: tenderListOkSchema,
+          400: badRequestErrorSchema,
+          ...authedErrorResponses,
+        },
       },
     },
     async (request) => {
@@ -87,11 +119,17 @@ export async function registerTenderRoutes(app: FastifyInstance): Promise<void> 
     {
       schema: {
         tags: ['tenders'],
+        summary: 'Tenders by province',
+        operationId: 'listTendersByProvince',
         description: 'Tenders for a single province (case-insensitive).',
         security: [{ apiKey: [] }],
         params: provinceParam,
         querystring: paginationQuerySchema,
-        response: { 200: tenderListResponseSchema, 400: errorSchema, 401: errorSchema },
+        response: {
+          200: tenderListOkSchema,
+          400: badRequestErrorSchema,
+          ...authedErrorResponses,
+        },
       },
     },
     async (request) => {
@@ -105,11 +143,17 @@ export async function registerTenderRoutes(app: FastifyInstance): Promise<void> 
     {
       schema: {
         tags: ['tenders'],
+        summary: 'Tenders by CIDB grade',
+        operationId: 'listTendersByGrade',
         description: 'Tenders matching a CIDB grade. A single grade also matches ranges containing it (6 matches 5-7).',
         security: [{ apiKey: [] }],
         params: gradeParam,
         querystring: paginationQuerySchema,
-        response: { 200: tenderListResponseSchema, 400: errorSchema, 401: errorSchema },
+        response: {
+          200: tenderListOkSchema,
+          400: badRequestErrorSchema,
+          ...authedErrorResponses,
+        },
       },
     },
     async (request) => {
@@ -123,11 +167,17 @@ export async function registerTenderRoutes(app: FastifyInstance): Promise<void> 
     {
       schema: {
         tags: ['tenders'],
+        summary: 'Tenders by CIDB class',
+        operationId: 'listTendersByClass',
         description: 'Tenders matching a CIDB class of works (e.g. GB, CE, ME).',
         security: [{ apiKey: [] }],
         params: classParam,
         querystring: paginationQuerySchema,
-        response: { 200: tenderListResponseSchema, 400: errorSchema, 401: errorSchema },
+        response: {
+          200: tenderListOkSchema,
+          400: badRequestErrorSchema,
+          ...authedErrorResponses,
+        },
       },
     },
     async (request) => {
@@ -141,10 +191,17 @@ export async function registerTenderRoutes(app: FastifyInstance): Promise<void> 
     {
       schema: {
         tags: ['tenders'],
+        summary: 'Get one tender',
+        operationId: 'getTender',
         description: 'Full tender detail including documents. Accepts the internal id or the stable externalId.',
         security: [{ apiKey: [] }],
         params: idParam,
-        response: { 200: tenderResponseSchema, 401: errorSchema, 404: errorSchema },
+        response: {
+          200: tenderOkSchema,
+          400: badRequestErrorSchema,
+          404: notFoundErrorSchema,
+          ...authedErrorResponses,
+        },
       },
     },
     async (request, reply) => {

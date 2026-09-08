@@ -6,6 +6,42 @@ export const errorSchema = z.object({
   error: z.object({ code: z.string(), message: z.string() }),
 });
 
+/**
+ * Documented error schemas.
+ *
+ * The `.describe()` text becomes the OpenAPI *response* description, i.e. what
+ * Swagger UI prints next to each status code. Without it every response in the
+ * docs is rendered as the meaningless "Default Response".
+ */
+export const badRequestErrorSchema = errorSchema.describe(
+  'Bad request — a query or path parameter failed validation.',
+);
+export const unauthorizedErrorSchema = errorSchema.describe(
+  'Unauthorized — the `X-API-Key` header is missing, unknown or inactive.',
+);
+export const forbiddenErrorSchema = errorSchema.describe(
+  'Forbidden — the key is valid but does not have the ADMIN role.',
+);
+export const notFoundErrorSchema = errorSchema.describe('Not found — no resource matches the request.');
+export const conflictErrorSchema = errorSchema.describe('Conflict — a synchronization is already running.');
+export const rateLimitedErrorSchema = errorSchema.describe(
+  'Too many requests — the rate limit was exceeded; retry after the window resets.',
+);
+export const unavailableErrorSchema = errorSchema.describe('Service unavailable — the database is unreachable.');
+
+/** Error responses shared by every authenticated route (401 + 429). */
+export const authedErrorResponses = {
+  401: unauthorizedErrorSchema,
+  429: rateLimitedErrorSchema,
+} as const;
+
+/** Error responses shared by every admin route (401 + 403 + 429). */
+export const adminErrorResponses = {
+  401: unauthorizedErrorSchema,
+  403: forbiddenErrorSchema,
+  429: rateLimitedErrorSchema,
+} as const;
+
 const documentSummarySchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -159,3 +195,25 @@ export const syncStartResponseSchema = z.object({
 
 export const syncHistoryResponseSchema = paginatedSchema(syncRunSchema);
 export const syncErrorsResponseSchema = paginatedSchema(syncErrorSchema);
+
+/**
+ * Documented success schemas — same shapes as above, each carrying the
+ * description Swagger UI shows for the 200/202 response.
+ */
+export const tenderListOkSchema = tenderListResponseSchema.describe('Paginated tenders matching the request.');
+export const tenderOkSchema = tenderResponseSchema.describe('Full tender detail, including its documents.');
+export const tenderDocumentsOkSchema = tenderDocumentsResponseSchema.describe('Documents attached to the tender.');
+export const statsOkSchema = statsResponseSchema.describe('Aggregate counts, sync freshness and breakdowns.');
+export const healthOkSchema = healthResponseSchema.describe('Service is up and the database answered.');
+export const healthDegradedSchema = healthResponseSchema.describe('Service is up but the database is unreachable.');
+export const detailedHealthOkSchema = detailedHealthResponseSchema.describe(
+  'Database, source, worker and record-count diagnostics.',
+);
+export const syncAcceptedSchema = syncStartResponseSchema.describe(
+  'Sync accepted and running in the background; poll GET /admin/sync/{id} for progress.',
+);
+export const syncHistoryOkSchema = syncHistoryResponseSchema.describe('Recent synchronization runs, newest first.');
+export const syncDetailOkSchema = syncDetailResponseSchema.describe(
+  'One synchronization run with its counters and most recent errors.',
+);
+export const syncErrorsOkSchema = syncErrorsResponseSchema.describe('Recent ingestion errors, newest first.');

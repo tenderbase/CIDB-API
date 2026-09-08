@@ -1,0 +1,197 @@
+name: Ingest CIDB tenders
+
+# Runs the real ingestion pipeline against the live CIDB website from a GitHub
+# runner (the sandbox/dev machines that cannot reach cidb.org.za still can).
+#
+# target=dataset  → fetch the source feed (or crawl every listing page), normalize,
+#                   upload JSON/CSV + the raw payload
+# target=database → additionally run one sync into the configured DATABASE_URL
+#                   (requires the DATABASE_URL repository secret)
+#
+# Trigger: Actions → "Ingest CIDB tenders" → Run workflow.
+
+on:
+  # Validate the scraper against the live source whenever the ingestion code
+  # changes (also what makes the workflow runnable from a feature branch —
+  # workflow_dispatch only lists workflows that exist on the default branch).
+  push:
+    paths:
+      - 'scripts/ingest-export.ts'
+      - 'src/cidb/**'
+      - '.github/workflows/ingest.yml'
+  workflow_dispatch:
+    inputs:
+      source_url:
+        description: 'CIDB source to ingest (machine-readable feed by default; an HTML listing also works)'
+        required: false
+        default: 'https://www.cidb.org.za/tenders.json'
+      max_pages:
+        description: 'Maximum listing pages to follow (HTML crawl mode only)'
+        required: false
+        default: '25'
+      target:
+        description: 'What to do with the result'
+        required: false
+        type: choice
+        default: 'dataset'
+        options:
+          - dataset
+          - database
+          - both
+      publish_snapshot:
+        description: 'Commit the dataset + raw HTML to snapshots/ on this branch'
+        required: false
+        type: boolean
+        default: true
+
+concurrency:
+  group: ingest-cidb-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  ingest:
+    name: Fetch + normalize the live source
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write   # needed to publish the snapshot commit below
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # The listing page renders its rows client-side from a machine-readable
+      # feed (see loadDataTable() in the page source), so capture that feed too:
+      # it is the authoritative dataset and the fixture source for tests.
+      - name: Capture the machine-readable feed
+        continue-on-error: true
+        run: |
+          mkdir -p artifacts/cidb-source
+          curl -sS --fail-with-body -L \
+            -A 'CIDB-Tender-API/1.0 (+https://github.com/tenderbase; contact: TenderBase data service)' \
+            -H 'Accept: application/json' \
+            'https://www.cidb.org.za/tenders.json' -o artifacts/cidb-source/tenders.json
+          echo "tenders.json bytes: $(wc -c < artifacts/cidb-source/tenders.json)"
+          head -c 1200 artifacts/cidb-source/tenders.json; echo
+
+      - name: Ingest the live source
+        env:
+          LOG_LEVEL: warn
+          # Polite scraping: keep the configured delay and descriptive UA.
+          CIDB_SOURCE_URL: ${{ inputs.source_url || 'https://www.cidb.org.za/tenders.json' }}
+        shell: bash
+        run: |
+          set -o pipefail   # a failed ingestion must fail the step, not just tee
+          npx tsx scripts/ingest-export.ts \
+            --url="${{ inputs.source_url || 'https://www.cidb.org.za/tenders.json' }}" \
+            --max-pages="${{ inputs.max_pages || 25 }}" \
+            --out=data --raw=artifacts/cidb-source | tee ingest.log
+
+      - name: Job summary
+        if: always()
+        run: |
+          echo '### CIDB ingestion' >> "$GITHUB_STEP_SUMMARY"
+          if [ -f data/ingest-summary.json ]; then
+            echo '```json' >> "$GITHUB_STEP_SUMMARY"
+            cat data/ingest-summary.json >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo 'No dataset was produced — see the run log.' >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            tail -n 60 ingest.log >> "$GITHUB_STEP_SUMMARY" || true
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      # Artifacts and job logs live on Azure blob storage, which some
+      # firewalled dev environments cannot download. Committing the snapshot to
+      # the branch keeps the result readable through plain git/GitHub API.
+      - name: Publish snapshot to the branch
+        # Always publish: when the HTML pipeline finds nothing, the captured feed
+        # and the summary are exactly what explains why.
+        if: ${{ always() && (github.event_name == 'push' || inputs.publish_snapshot) }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          stamp="$(date -u +%Y-%m-%dT%H%M%SZ)"
+          dir="snapshots/$stamp"
+          mkdir -p "$dir/source-html"
+          cp -r data/. "$dir"/ 2>/dev/null || true
+          cp -r artifacts/cidb-source/. "$dir"/source-html/ 2>/dev/null || true
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$dir"
+          if git diff --cached --quiet; then
+            echo "Nothing to publish."
+          else
+            git commit -m "chore(snapshot): CIDB ingestion $stamp [skip ci]"
+            git push origin "HEAD:${GITHUB_REF#refs/heads/}"
+            echo "Published $dir"
+          fi
+
+      - name: Upload dataset
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cidb-tenders
+          path: |
+            data/
+            ingest.log
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Upload raw source snapshot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cidb-source-html
+          path: artifacts/cidb-source/
+          if-no-files-found: warn
+          retention-days: 30
+
+  database:
+    name: Sync into the database
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: ingest
+    if: ${{ inputs.target == 'database' || inputs.target == 'both' }}
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      CIDB_SOURCE_URL: ${{ inputs.source_url || 'https://www.cidb.org.za/tenders.json' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Require DATABASE_URL
+        if: ${{ env.DATABASE_URL == '' }}
+        run: |
+          echo "::error::Set the DATABASE_URL repository secret (Neon connection string) to sync into the database."
+          exit 1
+
+      - name: Install dependencies
+        if: ${{ env.DATABASE_URL != '' }}
+        run: npm ci
+
+      - name: Migrate and run one sync
+        if: ${{ env.DATABASE_URL != '' }}
+        env:
+          LOG_LEVEL: info
+        run: |
+          npx prisma generate
+          npx prisma migrate deploy
+          npm run build
+          npm run worker:once
