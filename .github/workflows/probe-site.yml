@@ -1,0 +1,100 @@
+name: Probe the CIDB site
+
+# Diagnostic: the main feed serves 25 tenders while declaring tender_count=33.
+# This walks the source website (robots/sitemaps, the tenders section, every
+# same-host link mentioning "tender", and every .json endpoint referenced in page
+# markup or inline JS) to find out whether the missing records are published
+# anywhere else — another feed, a server-rendered table, an awards page.
+#
+# Runs from a GitHub runner because dev sandboxes often cannot reach cidb.org.za.
+# Trigger: push touching the probe, or Actions → "Probe the CIDB site" → Run.
+
+on:
+  push:
+    paths:
+      - 'scripts/probe-site.ts'
+      - '.github/workflows/probe-site.yml'
+  workflow_dispatch:
+    inputs:
+      max_urls:
+        description: 'Maximum URLs to fetch'
+        required: false
+        default: '60'
+
+concurrency:
+  group: probe-site-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    name: Look for the tenders the feed does not serve
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: write   # publishes the report to the branch below
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Walk the site
+        env:
+          LOG_LEVEL: warn
+        shell: bash
+        run: |
+          set -o pipefail   # a failed probe must fail the step, not just tee
+          mkdir -p artifacts
+          npx tsx scripts/probe-site.ts \
+            --max-urls="${{ inputs.max_urls || 60 }}" \
+            --out=artifacts/site-probe.json | tee site-probe.log
+
+      - name: Job summary
+        if: always()
+        run: |
+          echo '### CIDB site probe' >> "$GITHUB_STEP_SUMMARY"
+          echo '```text' >> "$GITHUB_STEP_SUMMARY"
+          cat site-probe.log >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || echo 'no probe output' >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+      # Artifact storage is not reachable from every dev environment, so commit
+      # the report to the branch — readable through plain git/GitHub.
+      - name: Publish the report to the branch
+        if: ${{ always() && github.event_name == 'push' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          stamp="$(date -u +%Y-%m-%dT%H%M%SZ)"
+          dir="snapshots/$stamp/site-probe"
+          mkdir -p "$dir"
+          cp artifacts/site-probe.json "$dir"/ 2>/dev/null || true
+          cp site-probe.log "$dir"/ 2>/dev/null || true
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$dir"
+          if git diff --cached --quiet; then
+            echo "Nothing to publish."
+          else
+            git commit -m "chore(probe): CIDB site probe $stamp [skip ci]"
+            git push origin "HEAD:${GITHUB_REF#refs/heads/}"
+            echo "Published $dir"
+          fi
+
+      - name: Upload probe report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cidb-site-probe
+          path: |
+            artifacts/site-probe.json
+            site-probe.log
+          if-no-files-found: warn
+          retention-days: 30

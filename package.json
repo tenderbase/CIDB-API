@@ -26,6 +26,7 @@
     "openapi:check": "tsx scripts/export-openapi.ts && git diff --exit-code docs/openapi.yaml",
     "ingest:export": "tsx scripts/ingest-export.ts",
     "probe:feed": "tsx scripts/probe-feed.ts",
+    "probe:site": "tsx scripts/probe-site.ts",
     "keys:hash": "tsx scripts/hash-key.ts",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.scripts.json",
     "lint": "tsc --noEmit && tsc --noEmit -p tsconfig.scripts.json",
