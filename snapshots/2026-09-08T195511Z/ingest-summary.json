@@ -1,0 +1,62 @@
+{
+  "generatedAt": "2026-09-08T19:55:08.361Z",
+  "source": "https://www.cidb.org.za/tenders.json",
+  "sourceKind": "JSON feed",
+  "pagesFetched": 2,
+  "pages": [
+    {
+      "pageNumber": 1,
+      "url": "https://www.cidb.org.za/tenders.json?page=1&limit=100",
+      "rows": 25,
+      "bytes": 47772
+    },
+    {
+      "pageNumber": 2,
+      "url": "https://www.cidb.org.za/tenders.json?page=2&limit=100",
+      "rows": 25,
+      "bytes": 47772
+    }
+  ],
+  "rowsParsed": 25,
+  "tenders": 25,
+  "documents": 86,
+  "normalizeFailures": 0,
+  "byStatus": {
+    "AWARDED": 22,
+    "CLOSED": 2,
+    "OPEN": 1
+  },
+  "byProvince": {
+    "UNKNOWN": 15,
+    "Gauteng": 3,
+    "Free State": 2,
+    "Mpumalanga": 2,
+    "KwaZulu-Natal": 2,
+    "Eastern Cape": 1
+  },
+  "byGrade": {
+    "UNKNOWN": 24,
+    "7-9": 1
+  },
+  "byTenderType": {
+    "Services": 9,
+    "UNKNOWN": 7,
+    "Works": 5,
+    "Supply": 3,
+    "Consulting": 1
+  },
+  "publishedDates": {
+    "earliest": "2024-12-13T16:23:10.000Z",
+    "latest": "2026-06-01T17:35:25.000Z"
+  },
+  "closingDates": {
+    "known": 0,
+    "unknown": 25,
+    "earliest": null,
+    "latest": null
+  },
+  "warnings": [
+    "feed repeated page 2 with no new entries (paging parameters ignored?): 25 distinct records collected, tender_count declares 33",
+    "source declares 33 tenders but 25 were returned — raise --limit/--max-pages or check the feed's paging parameters"
+  ]
+}
