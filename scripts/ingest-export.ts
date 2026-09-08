@@ -401,3 +401,5 @@ main().catch((error) => {
   console.error(error instanceof Error ? (error.stack ?? error.message) : String(error));
   process.exit(1);
 });
+
+// (no-op change to re-trigger the path-filtered ingest workflow)
