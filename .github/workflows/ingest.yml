@@ -10,6 +10,14 @@ name: Ingest CIDB tenders
 # Trigger: Actions → "Ingest CIDB tenders" → Run workflow.
 
 on:
+  # Validate the scraper against the live source whenever the ingestion code
+  # changes (also what makes the workflow runnable from a feature branch —
+  # workflow_dispatch only lists workflows that exist on the default branch).
+  push:
+    paths:
+      - 'scripts/ingest-export.ts'
+      - 'src/cidb/**'
+      - '.github/workflows/ingest.yml'
   workflow_dispatch:
     inputs:
       source_url:
@@ -56,11 +64,11 @@ jobs:
         env:
           LOG_LEVEL: warn
           # Polite scraping: keep the configured delay and descriptive UA.
-          CIDB_SOURCE_URL: ${{ inputs.source_url }}
+          CIDB_SOURCE_URL: ${{ inputs.source_url || 'https://www.cidb.org.za/cidb-tenders/current-tenders/' }}
         run: |
           npx tsx scripts/ingest-export.ts \
-            --url="${{ inputs.source_url }}" \
-            --max-pages="${{ inputs.max_pages }}" \
+            --url="${{ inputs.source_url || 'https://www.cidb.org.za/cidb-tenders/current-tenders/' }}" \
+            --max-pages="${{ inputs.max_pages || 25 }}" \
             --out=data --raw=artifacts/cidb-source | tee ingest.log
 
       - name: Job summary
@@ -106,7 +114,7 @@ jobs:
     if: ${{ inputs.target == 'database' || inputs.target == 'both' }}
     env:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      CIDB_SOURCE_URL: ${{ inputs.source_url }}
+      CIDB_SOURCE_URL: ${{ inputs.source_url || 'https://www.cidb.org.za/cidb-tenders/current-tenders/' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
