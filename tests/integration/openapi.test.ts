@@ -70,8 +70,12 @@ afterAll(async () => {
 
 describe('openapi document', () => {
   it('is valid OpenAPI 3.0', async () => {
-    const validated = await SwaggerParser.validate(JSON.parse(JSON.stringify(doc)));
+    const validated = (await SwaggerParser.validate(JSON.parse(JSON.stringify(doc)))) as unknown as {
+      openapi: string;
+      info: { title: string };
+    };
     expect(validated.openapi).toBe('3.0.3');
+    expect(validated.info.title).toBe('CIDB Tender API');
   });
 
   it('describes the service, its tags and its API-key scheme', () => {
