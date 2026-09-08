@@ -24,6 +24,7 @@
     "openapi:export": "tsx scripts/export-openapi.ts",
     "openapi:export:local": "tsx scripts/export-openapi.ts --relative",
     "openapi:check": "tsx scripts/export-openapi.ts && git diff --exit-code docs/openapi.yaml",
+    "ingest:export": "tsx scripts/ingest-export.ts",
     "keys:hash": "tsx scripts/hash-key.ts",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.scripts.json",
     "lint": "tsc --noEmit && tsc --noEmit -p tsconfig.scripts.json",

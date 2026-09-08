@@ -1,0 +1,138 @@
+name: Ingest CIDB tenders
+
+# Runs the real ingestion pipeline against the live CIDB website from a GitHub
+# runner (the sandbox/dev machines that cannot reach cidb.org.za still can).
+#
+# target=dataset  → fetch every listing page, normalize, upload JSON/CSV + raw HTML
+# target=database → additionally run one sync into the configured DATABASE_URL
+#                   (requires the DATABASE_URL repository secret)
+#
+# Trigger: Actions → "Ingest CIDB tenders" → Run workflow.
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_url:
+        description: 'CIDB listing to ingest'
+        required: false
+        default: 'https://www.cidb.org.za/cidb-tenders/current-tenders/'
+      max_pages:
+        description: 'Maximum listing pages to follow'
+        required: false
+        default: '25'
+      target:
+        description: 'What to do with the result'
+        required: false
+        type: choice
+        default: 'dataset'
+        options:
+          - dataset
+          - database
+          - both
+
+concurrency:
+  group: ingest-cidb-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  ingest:
+    name: Fetch + normalize the live listing
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Ingest every page of the listing
+        env:
+          LOG_LEVEL: warn
+          # Polite scraping: keep the configured delay and descriptive UA.
+          CIDB_SOURCE_URL: ${{ inputs.source_url }}
+        run: |
+          npx tsx scripts/ingest-export.ts \
+            --url="${{ inputs.source_url }}" \
+            --max-pages="${{ inputs.max_pages }}" \
+            --out=data --raw=artifacts/cidb-source | tee ingest.log
+
+      - name: Job summary
+        if: always()
+        run: |
+          echo '### CIDB ingestion' >> "$GITHUB_STEP_SUMMARY"
+          if [ -f data/ingest-summary.json ]; then
+            echo '```json' >> "$GITHUB_STEP_SUMMARY"
+            cat data/ingest-summary.json >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo 'No dataset was produced — see the run log.' >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            tail -n 60 ingest.log >> "$GITHUB_STEP_SUMMARY" || true
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload dataset
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cidb-tenders
+          path: |
+            data/
+            ingest.log
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Upload raw HTML snapshot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cidb-source-html
+          path: artifacts/cidb-source/
+          if-no-files-found: warn
+          retention-days: 30
+
+  database:
+    name: Sync into the database
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: ingest
+    if: ${{ inputs.target == 'database' || inputs.target == 'both' }}
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      CIDB_SOURCE_URL: ${{ inputs.source_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Require DATABASE_URL
+        if: ${{ env.DATABASE_URL == '' }}
+        run: |
+          echo "::error::Set the DATABASE_URL repository secret (Neon connection string) to sync into the database."
+          exit 1
+
+      - name: Install dependencies
+        if: ${{ env.DATABASE_URL != '' }}
+        run: npm ci
+
+      - name: Migrate and run one sync
+        if: ${{ env.DATABASE_URL != '' }}
+        env:
+          LOG_LEVEL: info
+        run: |
+          npx prisma generate
+          npx prisma migrate deploy
+          npm run build
+          npm run worker:once
