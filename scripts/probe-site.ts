@@ -6,18 +6,29 @@
  * website? To find out this walks the site the way a person would:
  *
  *   1. robots.txt + sitemap(s) → tender-related URLs
- *   2. the tenders section pages → every same-host link mentioning "tender"
- *   3. every `.json` endpoint referenced in page HTML/JS (the current listing is
- *      rendered from one; sibling listings may have their own)
+ *   2. the tenders section pages (current / awarded / archived / cancelled and
+ *      their pagination) → every allowed-host link mentioning "tender" or "bid"
+ *   3. every `.json` endpoint referenced in page markup or inline JS (the current
+ *      listing is rendered from one; a sibling listing may have its own)
+ *   4. the CIDB public tender register on registers.cidb.org.za, which the site
+ *      links to as its tender search
  *
- * and for each URL classifies what it holds — a machine-readable feed, an
- * HTML tender table, or neither — then diffs the bid numbers found against the
- * ones the main feed publishes. Anything that appears only elsewhere is a
- * candidate for the missing records.
+ * Each URL is classified as a machine-readable feed, an HTML tender table, a
+ * sitemap or neither. Bid numbers are collected three ways: from feed rows, from
+ * HTML tables (through the production parser), and by scanning page text and link
+ * URLs for bid-number patterns — so an award announcement or a cancellation
+ * notice counts even when it is not a table row. Document links (PDF/XLS/…) are
+ * recorded but NOT downloaded: their names carry bid numbers, their bytes do not
+ * belong in a probe.
+ *
+ * Everything found is diffed against the bid numbers the main feed publishes, and
+ * records that exist only elsewhere are named — split into "current" (matching a
+ * financial-year suffix the feed itself uses, e.g. `…2627`) and historical.
  *
  * Usage:
  *   npx tsx scripts/probe-site.ts                          # → data/site-probe.json
- *   npx tsx scripts/probe-site.ts --max-urls=80 --delay=1000 --out=artifacts/site-probe.json
+ *   npx tsx scripts/probe-site.ts --max-urls=90 --delay=1000 --out=artifacts/site-probe.json
+ *   npx tsx scripts/probe-site.ts --origin=http://127.0.0.1:8080   # offline smoke test
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
@@ -27,26 +38,17 @@ import { parseCurrentTendersHtml, probeTenderTable } from '../src/cidb/parser.js
 import { fetchHtml } from '../src/cidb/scraper.js';
 import { config } from '../src/config.js';
 
-const ORIGIN = 'https://www.cidb.org.za';
-const MAIN_FEED = `${ORIGIN}/tenders.json`;
-
-/** Where to start looking. Deliberately includes the plausible sibling slugs. */
-const SEED_URLS = [
-  `${ORIGIN}/robots.txt`,
-  `${ORIGIN}/sitemap.xml`,
-  `${ORIGIN}/sitemap_index.xml`,
-  `${ORIGIN}/wp-sitemap.xml`,
-  `${ORIGIN}/cidb-tenders/`,
-  `${ORIGIN}/cidb-tenders/current-tenders/`,
-  `${ORIGIN}/cidb-tenders/awarded-tenders/`,
-  `${ORIGIN}/cidb-tenders/closed-tenders/`,
-  `${ORIGIN}/cidb-tenders/archived-tenders/`,
-  `${ORIGIN}/cidb-tenders/cancelled-tenders/`,
-  `${ORIGIN}/tenders/`,
-  `${ORIGIN}/tender-bulletin/`,
-  `${ORIGIN}/tender-awards/`,
-  MAIN_FEED,
-];
+const DEFAULT_ORIGIN = 'https://www.cidb.org.za';
+/** The site's own tender search lives on a second CIDB host — worth one look. */
+const REGISTER_URL = 'https://registers.cidb.org.za/PublicTenders/TenderSearch';
+/** Document extensions / upload paths: recorded, never downloaded. */
+const DOCUMENT_EXTENSION = /\.(pdf|docx?|xlsx?|xlsm|pptx?|zip|rar|7z|csv|rtf)([?#]|$)/i;
+/** Bid-number shapes seen on the site: "cidb 004 2627", "CIDB-003-2526", "RFB20020". */
+const BID_PATTERNS = [/cidb[\s._-]*\d{3}[\s._-]*\d{4}/gi, /\brfb[\s._-]*\d{4,6}/gi];
+/** Report-size guards. */
+const MAX_BID_MATCHES_PER_URL = 200;
+const MAX_DOCUMENT_LINKS = 500;
+const MAX_EXTERNAL_LEADS = 100;
 
 type Kind = 'json-feed' | 'html-table' | 'html' | 'sitemap' | 'robots' | 'binary' | 'error';
 
@@ -56,13 +58,18 @@ interface FetchedUrl {
   status: number | null;
   bytes: number;
   foundOn: string | null;
-  /** Feed/table rows discovered here. */
+  /** Rows in a feed or HTML tender table. */
   rows: number | null;
   declaredTotal: number | null;
+  /** Bid numbers from structured rows (feed entries / parsed table rows). */
   bidNumbers: string[];
-  /** `.json` endpoints referenced by this page (or discovered in a sitemap). */
+  /** Bid numbers mentioned anywhere in the page text or its link URLs. */
+  bidMatches: string[];
+  /** `.json` endpoints referenced by this page. */
   jsonEndpoints: string[];
-  /** Same-host links worth following, discovered here. */
+  /** Document links found here (recorded, not fetched). */
+  documentLinks: string[];
+  /** Allowed-host links queued from here. */
   linksQueued: number;
   error: string | null;
 }
@@ -71,16 +78,21 @@ interface SiteProbeReport {
   generatedAt: string;
   origin: string;
   mainFeed: string;
+  registerUrl: string;
   userAgent: string;
   maxUrls: number;
   delayMs: number;
   visited: FetchedUrl[];
   skipped: { url: string; reason: string }[];
+  documentLinks: string[];
   bidNumbers: {
     mainFeed: string[];
     elsewhere: string[];
-    /** Present somewhere on the site but NOT in the main feed — the interesting set. */
+    /** Seen somewhere on the site but NOT in the main feed — the interesting set. */
     onlyElsewhere: string[];
+    /** …of those, the ones matching a financial-year suffix the feed itself uses. */
+    onlyElsewhereCurrent: string[];
+    onlyElsewhereFoundOn: Record<string, string[]>;
   };
   jsonEndpoints: { url: string; foundOn: string[]; rows: number | null; declaredTotal: number | null }[];
   externalLeads: string[];
@@ -90,20 +102,52 @@ interface SiteProbeReport {
     htmlTables: number;
     nonEmptyTables: number;
     errors: number;
+    documentsSkipped: number;
     distinctBidNumbers: number;
+    fromFeedRows: number;
+    fromPageText: number;
   };
   findings: string[];
 }
 
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
-/** Bid numbers compared case/space-insensitively, displayed normalized. */
-const normalizeBid = (value: string): string => value.replace(/\s+/g, ' ').trim().toUpperCase();
+/** Display form: "cidb-004-2627" → "CIDB 004 2627". */
+const normalizeBid = (value: string): string =>
+  value
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toUpperCase()
+    .replace(/[._]+/g, ' ')
+    .replace(/\s*-\s*/g, ' ')
+    .replace(/\s+/g, ' ');
 
-function parseArgs(argv: string[]): { maxUrls: number; delayMs: number; outPath: string } {
-  let maxUrls = 60;
+/** Comparison key: alphanumerics only, so "CIDB-003-2526" == "cidb 003 2526". */
+const bidKey = (value: string): string => normalizeBid(value).replace(/[^A-Z0-9]/g, '');
+
+/** Trailing financial-year token, e.g. "CIDB 004 2627" → "2627". */
+const yearSuffix = (value: string): string | null => {
+  const digits = value.replace(/[^0-9]/g, '');
+  return digits.length >= 4 ? digits.slice(-4) : null;
+};
+
+/** Bid numbers mentioned in page text or link URLs (awards, cancellations, notices). */
+function scanBidNumbers(body: string): string[] {
+  const found = new Map<string, string>();
+  for (const pattern of BID_PATTERNS) {
+    for (const match of body.match(pattern) ?? []) {
+      const key = bidKey(match);
+      if (key && !found.has(key)) found.set(key, normalizeBid(match));
+    }
+  }
+  return [...found.values()].sort().slice(0, MAX_BID_MATCHES_PER_URL);
+}
+
+function parseArgs(argv: string[]): { maxUrls: number; delayMs: number; outPath: string; origin: string } {
+  let maxUrls = 90;
   let delayMs = config.REQUEST_DELAY_MS;
   let outPath = 'data/site-probe.json';
+  let origin = DEFAULT_ORIGIN;
   for (const arg of argv) {
     const equals = arg.indexOf('=');
     if (!arg.startsWith('--') || equals === -1) continue;
@@ -112,18 +156,53 @@ function parseArgs(argv: string[]): { maxUrls: number; delayMs: number; outPath:
     if (flag === 'max-urls') maxUrls = Math.max(1, Number.parseInt(value, 10) || maxUrls);
     if (flag === 'delay') delayMs = Math.max(0, Number.parseInt(value, 10) || 0);
     if (flag === 'out' && value) outPath = value;
+    if (flag === 'origin' && value) origin = value.replace(/\/+$/, '');
   }
-  return { maxUrls, delayMs, outPath };
+  return { maxUrls, delayMs, outPath, origin };
 }
 
-function isSameHost(url: URL): boolean {
-  return url.hostname === 'www.cidb.org.za' || url.hostname === 'cidb.org.za';
+/** Where to start: the tenders section, its plausible siblings, the sitemaps, the register. */
+function seedUrls(origin: string): string[] {
+  return [
+    `${origin}/tenders.json`,
+    `${origin}/cidb-tenders/`,
+    `${origin}/cidb-tenders/current-tenders/`,
+    `${origin}/cidb-tenders/awarded-tenders/`,
+    `${origin}/cidb-tenders/closed-tenders/`,
+    `${origin}/cidb-tenders/archived-tenders/`,
+    `${origin}/cidb-tenders/cancelled-tenders/`,
+    `${origin}/tenders/`,
+    `${origin}/tender-bulletin/`,
+    `${origin}/tender-awards/`,
+    `${origin}/robots.txt`,
+    `${origin}/sitemap.xml`,
+    `${origin}/sitemap_index.xml`,
+    `${origin}/wp-sitemap.xml`,
+    REGISTER_URL,
+  ];
 }
 
-/** Worth following: mentions tenders, is a feed, or is a sitemap. */
+/** Hosts this probe may fetch: the origin (either spelling) plus the CIDB register. */
+function allowedHosts(origin: string): Set<string> {
+  const hosts = new Set<string>(['www.cidb.org.za', 'cidb.org.za', 'registers.cidb.org.za']);
+  try {
+    hosts.add(new URL(origin).hostname.toLowerCase());
+  } catch {
+    // unusable --origin: the walk simply finds nothing
+  }
+  return hosts;
+}
+
+const isAllowedHost = (url: URL, hosts: Set<string>): boolean => hosts.has(url.hostname.toLowerCase());
+
+function isDocumentUrl(url: URL): boolean {
+  return DOCUMENT_EXTENSION.test(url.pathname) || /\/wp-content\/uploads\//i.test(url.pathname);
+}
+
+/** Worth following: mentions tenders/bids, is a feed, or is a sitemap. */
 function isInteresting(url: URL): boolean {
   const path = url.pathname.toLowerCase();
-  return /tender/.test(path) || path.endsWith('.json') || /sitemap/.test(path) || /bid/.test(path);
+  return /tender|bid/.test(path) || path.endsWith('.json') || /sitemap/.test(path);
 }
 
 function canonical(url: URL): string {
@@ -132,106 +211,107 @@ function canonical(url: URL): string {
   return copy.toString();
 }
 
-/** Links + `.json` endpoints referenced anywhere in a page's markup or inline JS. */
-function extractReferences(body: string, baseUrl: string): { links: string[]; jsonEndpoints: string[]; external: string[] } {
+interface References {
+  links: string[];
+  jsonEndpoints: string[];
+  documents: string[];
+  external: string[];
+}
+
+/** Links, feeds, documents and off-site leads referenced by a page. */
+function extractReferences(body: string, baseUrl: string, hosts: Set<string>): References {
   const links = new Set<string>();
   const jsonEndpoints = new Set<string>();
+  const documents = new Set<string>();
   const external = new Set<string>();
+
+  const consider = (href: string): void => {
+    let resolved: URL;
+    try {
+      resolved = new URL(href, baseUrl);
+    } catch {
+      return; // relative junk / malformed href
+    }
+    if (!/^https?:$/.test(resolved.protocol)) return;
+    const key = canonical(resolved);
+    if (!isAllowedHost(resolved, hosts)) {
+      if (/tender|bid/i.test(key) && external.size < MAX_EXTERNAL_LEADS) external.add(key);
+      return;
+    }
+    if (isDocumentUrl(resolved)) {
+      if (documents.size < MAX_DOCUMENT_LINKS) documents.add(key);
+      return;
+    }
+    if (resolved.pathname.toLowerCase().endsWith('.json')) jsonEndpoints.add(key);
+    if (isInteresting(resolved)) links.add(key);
+  };
 
   const $ = cheerio.load(body);
   $('a[href]').each((_, element) => {
     const href = $(element).attr('href');
-    if (!href) return;
-    try {
-      const resolved = new URL(href, baseUrl);
-      if (!/^https?:$/.test(resolved.protocol)) return;
-      if (isSameHost(resolved)) {
-        if (isInteresting(resolved)) links.add(canonical(resolved));
-        if (resolved.pathname.toLowerCase().endsWith('.json')) jsonEndpoints.add(canonical(resolved));
-      } else if (/tender/i.test(resolved.toString())) {
-        external.add(canonical(resolved));
-      }
-    } catch {
-      // relative junk / malformed href — ignore
-    }
+    if (href) consider(href);
   });
 
-  // Endpoints built in inline JS (how tenders.json was found in the first place).
-  const rawJson = body.match(/https?:\\?\/\\?\/[^"'\\\s]+?\.json[^"'\\\s]*/gi) ?? [];
-  for (const match of rawJson) {
-    const cleaned = match.replace(/\\\//g, '/').replace(/[?&](r|_)=\d+$/i, '');
-    try {
-      const resolved = new URL(cleaned, baseUrl);
-      if (isSameHost(resolved)) jsonEndpoints.add(canonical(resolved));
-    } catch {
-      // ignore
-    }
+  // Endpoints built in inline JS — which is how tenders.json was found originally.
+  for (const match of body.match(/https?:\\?\/\\?\/[^"'\\\s<>]+?\.json[^"'\\\s<>]*/gi) ?? []) {
+    consider(match.replace(/\\\//g, '/').replace(/[?&](r|_)=[\d.]+/gi, ''));
   }
-  const relativeJson = body.match(/["'(]\s*\/[^"')\s]+\.json/gi) ?? [];
-  for (const match of relativeJson) {
-    const path = match.replace(/^["'(]\s*/, '');
-    try {
-      jsonEndpoints.add(canonical(new URL(path, baseUrl)));
-    } catch {
-      // ignore
-    }
+  for (const match of body.match(/["'(]\s*\/[^"')\s<>]+\.json/gi) ?? []) {
+    consider(match.replace(/^["'(]\s*/, ''));
+  }
+  // Sitemap <loc> entries (also covers sitemap indexes).
+  for (const match of body.match(/<loc>\s*([^<\s]+)\s*<\/loc>/gi) ?? []) {
+    consider(match.replace(/<\/?loc>/gi, '').trim());
   }
 
-  return { links: [...links], jsonEndpoints: [...jsonEndpoints], external: [...external] };
+  return { links: [...links], jsonEndpoints: [...jsonEndpoints], documents: [...documents], external: [...external] };
 }
 
-/** <loc> entries from sitemap XML (also handles sitemap indexes). */
-function extractSitemapLocations(body: string, baseUrl: string): string[] {
-  const locations = new Set<string>();
-  const matches = body.match(/<loc>\s*([^<\s]+)\s*<\/loc>/gi) ?? [];
-  for (const match of matches) {
-    const value = match.replace(/<\/?loc>/gi, '').trim();
-    try {
-      const resolved = new URL(value, baseUrl);
-      if (isSameHost(resolved)) locations.add(canonical(resolved));
-    } catch {
-      // ignore
-    }
-  }
-  return [...locations];
+interface Classified {
+  kind: Kind;
+  status: number;
+  bytes: number;
+  rows: number | null;
+  declaredTotal: number | null;
+  bidNumbers: string[];
+  bidMatches: string[];
+  jsonEndpoints: string[];
+  documentLinks: string[];
 }
 
-function classify(url: string, body: string, status: number): Omit<FetchedUrl, 'url' | 'foundOn' | 'linksQueued' | 'error'> {
+function classify(url: string, body: string, status: number): Classified {
   const bytes = Buffer.byteLength(body, 'utf8');
   const lowered = url.toLowerCase();
   const trimmed = body.trimStart();
+  const base = { status, bytes, jsonEndpoints: [] as string[], documentLinks: [] as string[] };
 
-  // JSON feed?
+  // Machine-readable feed?
   if (trimmed.startsWith('{') || trimmed.startsWith('[') || lowered.endsWith('.json')) {
     try {
       const json = JSON.parse(body) as unknown;
       const probe = probeTendersJson(json);
       const entries = extractFeedEntries(json);
       return {
+        ...base,
         kind: 'json-feed',
-        status,
-        bytes,
         rows: probe.rowCount,
         declaredTotal: feedDeclaredCount(json),
-        bidNumbers: entries
-          .map((entry) => normalizeBid(String(entry.bid_number ?? '')))
-          .filter((bid) => bid !== ''),
-        jsonEndpoints: [],
+        bidNumbers: entries.map((entry) => normalizeBid(String(entry.bid_number ?? ''))).filter((bid) => bid !== ''),
+        bidMatches: [],
       };
     } catch {
       // not JSON after all — fall through
     }
   }
 
-  // robots.txt / sitemap XML
   if (lowered.endsWith('robots.txt') || /user-agent:/i.test(body.slice(0, 400))) {
-    return { kind: 'robots', status, bytes, rows: null, declaredTotal: null, bidNumbers: [], jsonEndpoints: [] };
+    return { ...base, kind: 'robots', rows: null, declaredTotal: null, bidNumbers: [], bidMatches: scanBidNumbers(body) };
   }
   if (/<\s*(urlset|sitemapindex)/i.test(body)) {
-    return { kind: 'sitemap', status, bytes, rows: null, declaredTotal: null, bidNumbers: [], jsonEndpoints: [] };
+    return { ...base, kind: 'sitemap', rows: null, declaredTotal: null, bidNumbers: [], bidMatches: scanBidNumbers(body) };
   }
 
-  // HTML tender table?
+  // HTML tender table? Run it through the production parser when there is one.
   const probe = probeTenderTable(body);
   if (probe.found) {
     let bidNumbers: string[] = [];
@@ -243,30 +323,39 @@ function classify(url: string, body: string, status: number): Omit<FetchedUrl, '
       bidNumbers = [];
     }
     return {
+      ...base,
       kind: 'html-table',
-      status,
-      bytes,
       rows: probe.rowCount,
       declaredTotal: null,
       bidNumbers,
-      jsonEndpoints: [],
+      bidMatches: scanBidNumbers(body),
     };
   }
 
-  if (/^<\s*(!doctype\s+html|html)/i.test(trimmed)) {
-    return { kind: 'html', status, bytes, rows: null, declaredTotal: null, bidNumbers: [], jsonEndpoints: [] };
-  }
-  return { kind: 'binary', status, bytes, rows: null, declaredTotal: null, bidNumbers: [], jsonEndpoints: [] };
+  const kind: Kind = /^<\s*(!doctype\s+html|html)/i.test(trimmed) ? 'html' : 'binary';
+  return {
+    ...base,
+    kind,
+    rows: null,
+    declaredTotal: null,
+    bidNumbers: [],
+    // Text scan still runs on ordinary pages: award/cancellation notices are posts,
+    // not tables, and their titles and links carry bid numbers.
+    bidMatches: kind === 'html' ? scanBidNumbers(body) : [],
+  };
 }
 
 async function main(): Promise<void> {
-  const { maxUrls, delayMs, outPath } = parseArgs(process.argv.slice(2));
-  console.log(`Probing ${ORIGIN} for other tender sources (max ${maxUrls} URLs, ${delayMs}ms apart)\n`);
+  const { maxUrls, delayMs, outPath, origin } = parseArgs(process.argv.slice(2));
+  const mainFeed = `${origin}/tenders.json`;
+  const hosts = allowedHosts(origin);
+  console.log(`Probing ${origin} for other tender sources (max ${maxUrls} URLs, ${delayMs}ms apart)\n`);
 
-  const queue: { url: string; foundOn: string | null }[] = SEED_URLS.map((url) => ({ url, foundOn: null }));
+  const queue: { url: string; foundOn: string | null }[] = seedUrls(origin).map((url) => ({ url, foundOn: null }));
   const seen = new Set<string>();
   const visited: FetchedUrl[] = [];
   const skipped: { url: string; reason: string }[] = [];
+  const documentLinks = new Set<string>();
   const endpointFoundOn = new Map<string, Set<string>>();
   const externalLeads = new Set<string>();
   let capReached = false;
@@ -278,47 +367,65 @@ async function main(): Promise<void> {
       break;
     }
     const { url, foundOn } = queue.shift() as { url: string; foundOn: string | null };
-    const key = canonical(new URL(url));
+
+    let parsedUrl: URL;
+    try {
+      parsedUrl = new URL(url);
+    } catch {
+      skipped.push({ url, reason: 'not a URL' });
+      continue;
+    }
+    const key = canonical(parsedUrl);
     if (seen.has(key)) continue;
     seen.add(key);
 
+    // Never download documents — but their names are evidence, so keep the link.
+    if (isDocumentUrl(parsedUrl)) {
+      if (documentLinks.size < MAX_DOCUMENT_LINKS) documentLinks.add(key);
+      skipped.push({ url, reason: 'document link (recorded, not downloaded)' });
+      console.log(`${String(visited.length + 1).padStart(3)}. document    ${url.slice(0, 110)}`);
+      continue;
+    }
+
     let record: FetchedUrl;
     try {
-      const { html, status, finalUrl } = await fetchHtml(url, { maxRetries: 1 });
-      const classified = classify(finalUrl || url, html, status);
+      // minBytes: 0 — for a probe, a tiny body (robots.txt, an empty feed) is an
+      // answer to record, not a request failure.
+      const { html, status, finalUrl } = await fetchHtml(url, { maxRetries: 1, minBytes: 0 });
+      const effectiveUrl = finalUrl || url;
+      const classified = classify(effectiveUrl, html, status);
       const references =
-        classified.kind === 'html' || classified.kind === 'html-table' || classified.kind === 'robots'
-          ? extractReferences(html, finalUrl || url)
-          : { links: [], jsonEndpoints: [], external: [] };
-      const sitemapLocations =
-        classified.kind === 'sitemap' || classified.kind === 'robots' ? extractSitemapLocations(html, finalUrl || url) : [];
+        classified.kind === 'binary' ? { links: [], jsonEndpoints: [], documents: [], external: [] } : extractReferences(html, effectiveUrl, hosts);
 
-      // Follow sitemap <loc> entries only when they look tender-related, plus any
-      // nested sitemap (so a sitemap index still leads somewhere useful).
-      const queued: string[] = [];
-      for (const candidate of [...references.links, ...sitemapLocations, ...references.jsonEndpoints, ...classified.jsonEndpoints]) {
+      let queued = 0;
+      for (const candidate of [...references.links, ...references.jsonEndpoints]) {
         const candidateKey = canonical(new URL(candidate));
         if (seen.has(candidateKey)) continue;
-        const parsed = new URL(candidate);
-        if (!isSameHost(parsed)) continue;
-        if (/sitemap/.test(parsed.pathname.toLowerCase()) || isInteresting(parsed)) {
-          queued.push(candidate);
-          queue.push({ url: candidate, foundOn: finalUrl || url });
+        const candidateUrl = new URL(candidate);
+        if (!isAllowedHost(candidateUrl, hosts)) continue;
+        if (isDocumentUrl(candidateUrl)) {
+          if (documentLinks.size < MAX_DOCUMENT_LINKS) documentLinks.add(candidateKey);
+          continue;
         }
+        if (!isInteresting(candidateUrl)) continue;
+        queue.push({ url: candidate, foundOn: effectiveUrl });
+        queued += 1;
       }
-      for (const endpoint of [...references.jsonEndpoints, ...classified.jsonEndpoints]) {
-        const endpointKey = canonical(new URL(endpoint));
-        if (!endpointFoundOn.has(endpointKey)) endpointFoundOn.set(endpointKey, new Set());
-        endpointFoundOn.get(endpointKey)?.add(finalUrl || url);
+      for (const document of references.documents) {
+        if (documentLinks.size < MAX_DOCUMENT_LINKS) documentLinks.add(document);
       }
       for (const lead of references.external) externalLeads.add(lead);
+      for (const endpoint of references.jsonEndpoints) {
+        if (!endpointFoundOn.has(endpoint)) endpointFoundOn.set(endpoint, new Set());
+        endpointFoundOn.get(endpoint)?.add(effectiveUrl);
+      }
 
-      record = { url, foundOn, linksQueued: queued.length, error: null, ...classified };
-      // A feed's own rows are its bid numbers; report them where found.
+      record = { url, foundOn, linksQueued: queued, error: null, ...classified };
       console.log(
         `${String(visited.length + 1).padStart(3)}. ${record.kind.padEnd(11)} HTTP ${String(record.status).padEnd(4)} ` +
           `${String(record.bytes).padStart(7)}B rows=${String(record.rows ?? '-').padStart(3)} ` +
-          `bids=${String(record.bidNumbers.length).padStart(3)} +${queued.length} links  ${url}`,
+          `bids=${String(record.bidNumbers.length).padStart(3)} text=${String(record.bidMatches.length).padStart(3)} ` +
+          `docs=${String(record.documentLinks.length).padStart(2)} +${queued} links  ${url.slice(0, 88)}`,
       );
     } catch (error) {
       record = {
@@ -330,54 +437,78 @@ async function main(): Promise<void> {
         rows: null,
         declaredTotal: null,
         bidNumbers: [],
+        bidMatches: [],
         jsonEndpoints: [],
+        documentLinks: [],
         linksQueued: 0,
         error: error instanceof Error ? error.message : String(error),
       };
-      console.log(`${String(visited.length + 1).padStart(3)}. error        ${url} — ${(record.error ?? '').slice(0, 110)}`);
+      console.log(`${String(visited.length + 1).padStart(3)}. error        ${url.slice(0, 88)} — ${(record.error ?? '').slice(0, 100)}`);
     }
     visited.push(record);
     if (queue.length > 0 && delayMs > 0) await sleep(delayMs);
   }
 
   // ── Bid-number diff: main feed vs everywhere else ──────────────────────────
-  const mainRecord = visited.find((record) => record.url === MAIN_FEED && record.kind === 'json-feed');
-  const mainBids = new Set(mainRecord?.bidNumbers ?? []);
-  const elsewhere = new Map<string, string[]>();
+  const mainRecord = visited.find((record) => canonical(new URL(record.url)) === canonical(new URL(mainFeed)) && record.kind === 'json-feed');
+  const feedKeys = new Set((mainRecord?.bidNumbers ?? []).map(bidKey));
+  const elsewhere = new Map<string, { display: string; urls: Set<string> }>();
   for (const record of visited) {
-    if (record.url === MAIN_FEED) continue;
-    for (const bid of record.bidNumbers) {
-      if (!elsewhere.has(bid)) elsewhere.set(bid, []);
-      elsewhere.get(bid)?.push(record.url);
+    if (mainRecord && record.url === mainRecord.url) continue;
+    for (const bid of [...record.bidNumbers, ...record.bidMatches]) {
+      const key = bidKey(bid);
+      if (!key) continue;
+      if (!elsewhere.has(key)) elsewhere.set(key, { display: normalizeBid(bid), urls: new Set() });
+      elsewhere.get(key)?.urls.add(record.url);
     }
   }
-  const onlyElsewhere = [...elsewhere.keys()].filter((bid) => !mainBids.has(bid)).sort();
-  const allBids = new Set([...mainBids, ...elsewhere.keys()]);
+  const feedYears = new Set(
+    (mainRecord?.bidNumbers ?? []).map((bid) => yearSuffix(bid)).filter((year): year is string => year !== null),
+  );
+  const onlyElsewhere = [...elsewhere.entries()]
+    .filter(([key]) => !feedKeys.has(key))
+    .map(([, value]) => value.display)
+    .sort();
+  const onlyElsewhereCurrent = [...elsewhere.entries()]
+    .filter(([key]) => !feedKeys.has(key))
+    .filter(([, value]) => {
+      const year = yearSuffix(value.display);
+      return year !== null && feedYears.has(year);
+    })
+    .map(([, value]) => value.display)
+    .sort();
+  const onlyElsewhereFoundOn: Record<string, string[]> = {};
+  for (const [key, value] of elsewhere) {
+    if (feedKeys.has(key)) continue;
+    onlyElsewhereFoundOn[value.display] = [...value.urls];
+  }
+  const allKeys = new Set([...feedKeys, ...elsewhere.keys()]);
 
   const feeds = visited.filter((record) => record.kind === 'json-feed');
   const tables = visited.filter((record) => record.kind === 'html-table');
+  const nonEmptyTables = tables.filter((table) => (table.rows ?? 0) > 0);
   const errors = visited.filter((record) => record.kind === 'error');
+  const registerRecord = visited.find((record) => record.url.startsWith('https://registers.cidb.org.za/'));
+  const textBidCount = new Set(visited.flatMap((record) => record.bidMatches.map(bidKey))).size;
 
   const findings: string[] = [];
   findings.push(
     mainRecord
-      ? `main feed ${MAIN_FEED}: ${mainRecord.rows} rows, tender_count declares ${mainRecord.declaredTotal ?? 'n/a'}, ${mainBids.size} distinct bid numbers`
-      : `main feed ${MAIN_FEED} could not be read`,
+      ? `main feed ${mainFeed}: ${mainRecord.rows} rows, tender_count declares ${mainRecord.declaredTotal ?? 'n/a'}, ${feedKeys.size} distinct bid numbers (financial-year suffixes: ${[...feedYears].sort().join(', ') || 'n/a'})`
+      : `main feed ${mainFeed} could not be read`,
   );
   findings.push(
     feeds.length > 1
-      ? `${feeds.length} machine-readable feeds found: ${feeds.map((f) => `${f.url} (${f.rows} rows)`).join(', ')}`
+      ? `${feeds.length} machine-readable feeds found: ${feeds.map((feed) => `${feed.url} (${feed.rows} rows)`).join(', ')}`
       : feeds.length === 1
-        ? 'no additional machine-readable feed exists on the site (only tenders.json)'
+        ? 'no second machine-readable feed exists on the site (tenders.json is the only one)'
         : 'no machine-readable feed found at all',
   );
   findings.push(
     tables.length === 0
       ? 'no server-rendered tender table found anywhere on the site'
-      : `${tables.length} page(s) expose an HTML tender table: ` +
-        tables.map((t) => `${t.url} (${t.rows} rows)`).join(', '),
+      : `${tables.length} page(s) expose an HTML tender table: ${tables.map((table) => `${table.url} (${table.rows} rows)`).join(', ')}`,
   );
-  const nonEmptyTables = tables.filter((table) => (table.rows ?? 0) > 0);
   findings.push(
     nonEmptyTables.length === 0
       ? 'every HTML tender table found is EMPTY in the served markup (browser-rendered), so HTML scraping cannot add records'
@@ -385,36 +516,58 @@ async function main(): Promise<void> {
   );
   findings.push(
     onlyElsewhere.length === 0
-      ? `no bid number found anywhere else on the site that is missing from the main feed (union = ${allBids.size})`
-      : `${onlyElsewhere.length} bid number(s) appear on the site but NOT in the main feed: ${onlyElsewhere.join(', ')}`,
+      ? `no bid number appears anywhere else on the site that is missing from the main feed (union across ${visited.length} URLs = ${allKeys.size})`
+      : `${onlyElsewhere.length} bid number(s) appear on the site but NOT in the main feed (${textBidCount} distinct numbers seen in page text overall)`,
   );
+  if (onlyElsewhereCurrent.length > 0) {
+    findings.push(
+      `${onlyElsewhereCurrent.length} of those look CURRENT (same financial-year suffix as feed records) — candidates for the missing tenders: ${onlyElsewhereCurrent.slice(0, 20).join(', ')}`,
+    );
+  } else if (onlyElsewhere.length > 0) {
+    findings.push(
+      `none of them match a financial-year suffix the feed uses (${[...feedYears].sort().join(', ') || 'n/a'}) — they are historical notices (awards/cancellations), not missing current tenders`,
+    );
+  }
+  if (registerRecord) {
+    findings.push(
+      registerRecord.kind === 'error'
+        ? `the linked public tender register (${registerRecord.url}) could not be fetched: ${(registerRecord.error ?? '').slice(0, 120)}`
+        : `the linked public tender register ${registerRecord.url} responded ${registerRecord.kind} (${registerRecord.bytes} bytes` +
+          `${registerRecord.jsonEndpoints.length > 0 ? `, references ${registerRecord.jsonEndpoints.length} JSON endpoint(s): ${registerRecord.jsonEndpoints.slice(0, 5).join(', ')}` : ', references no JSON endpoint'}` +
+          `${registerRecord.bidMatches.length > 0 ? `, mentions ${registerRecord.bidMatches.length} bid number(s)` : ''})`,
+    );
+  }
   if (externalLeads.size > 0) {
     findings.push(
       `${externalLeads.size} off-site tender lead(s) linked from the site (not fetched): ${[...externalLeads].slice(0, 10).join(', ')}`,
     );
   }
+  findings.push(`${documentLinks.size} document link(s) recorded but not downloaded (PDF/XLS notices, bid documents)`);
   if (errors.length > 0) {
     const notFound = errors.filter((record) => /404/.test(record.error ?? ''));
     findings.push(
-      `${errors.length} URL(s) failed (${notFound.length} of them 404) — e.g. ` +
-        errors.slice(0, 6).map((record) => record.url).join(', '),
+      `${errors.length} URL(s) failed (${notFound.length} of them 404): ${errors.slice(0, 8).map((record) => record.url).join(', ')}`,
     );
   }
   if (capReached) findings.push(`stopped at --max-urls=${maxUrls} with ${queue.length} URL(s) still queued`);
 
   const report: SiteProbeReport = {
     generatedAt: new Date().toISOString(),
-    origin: ORIGIN,
-    mainFeed: MAIN_FEED,
+    origin,
+    mainFeed,
+    registerUrl: REGISTER_URL,
     userAgent: config.CIDB_USER_AGENT,
     maxUrls,
     delayMs,
     visited,
-    skipped: skipped.slice(0, 200),
+    skipped: skipped.slice(0, 400),
+    documentLinks: [...documentLinks],
     bidNumbers: {
-      mainFeed: [...mainBids].sort(),
-      elsewhere: [...elsewhere.keys()].sort(),
+      mainFeed: (mainRecord?.bidNumbers ?? []).map(normalizeBid).sort(),
+      elsewhere: [...elsewhere.values()].map((value) => value.display).sort(),
       onlyElsewhere,
+      onlyElsewhereCurrent,
+      onlyElsewhereFoundOn,
     },
     jsonEndpoints: [...endpointFoundOn.entries()].map(([url, foundOn]) => {
       const record = visited.find((item) => canonical(new URL(item.url)) === url);
@@ -427,7 +580,10 @@ async function main(): Promise<void> {
       htmlTables: tables.length,
       nonEmptyTables: nonEmptyTables.length,
       errors: errors.length,
-      distinctBidNumbers: allBids.size,
+      documentsSkipped: documentLinks.size,
+      distinctBidNumbers: allKeys.size,
+      fromFeedRows: feedKeys.size,
+      fromPageText: textBidCount,
     },
     findings,
   };
@@ -438,9 +594,11 @@ async function main(): Promise<void> {
   console.log(`\nSummary: ${JSON.stringify(report.summary)}`);
   console.log('\nFindings:');
   for (const finding of findings) console.log(`  • ${finding}`);
-  if (onlyElsewhere.length > 0) {
-    console.log('\nWhere the extra bid numbers were found:');
-    for (const bid of onlyElsewhere.slice(0, 20)) console.log(`  ${bid} → ${(elsewhere.get(bid) ?? []).join(', ')}`);
+  if (onlyElsewhereCurrent.length > 0) {
+    console.log('\nCurrent-looking bid numbers missing from the feed:');
+    for (const bid of onlyElsewhereCurrent.slice(0, 25)) {
+      console.log(`  ${bid} → ${(onlyElsewhereFoundOn[bid] ?? []).slice(0, 3).join(', ')}`);
+    }
   }
   console.log(`\nReport written to ${outPath}`);
 }

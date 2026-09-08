@@ -10,6 +10,12 @@ export interface FetchOptions {
   userAgent?: string;
   /** Polite delay applied before the request (ms). */
   delayMs?: number;
+  /**
+   * Reject responses smaller than this many bytes (default 500) — a truncated or
+   * blocked page is a source failure, not an empty result. Set to 0 when a small
+   * body is a legitimate answer (robots.txt, an empty feed, diagnostics).
+   */
+  minBytes?: number;
 }
 
 export interface FetchResult {
@@ -47,6 +53,7 @@ export async function fetchHtml(url: string, options: FetchOptions = {}): Promis
     baseDelayMs = config.RETRY_BASE_DELAY_MS,
     userAgent = config.CIDB_USER_AGENT,
     delayMs = 0,
+    minBytes = 500,
   } = options;
 
   if (delayMs > 0) await sleep(delayMs);
@@ -77,7 +84,7 @@ export async function fetchHtml(url: string, options: FetchOptions = {}): Promis
           throw httpError(response.status, url);
         }
         const text = await response.text();
-        if (!text || text.length < 500) {
+        if (text.length < minBytes || (minBytes > 0 && !text)) {
           throw new SourceRequestError(`CIDB returned a suspiciously small response (${text.length} bytes) for ${url}`);
         }
         return text;

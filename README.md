@@ -508,7 +508,7 @@ Always attribute the source (`source`, `sourceUrl`) — TenderBase is not the pu
 
 ## Testing & verification
 
-- `npm test` — 191 tests: feed mapper (statuses, documents, description HTML, probing),
+- `npm test` — 195 tests: feed mapper (statuses, documents, description HTML, probing),
   parser/normalizer/dates/grades/classes/hashing/retry/query/config units; migration DDL
   executed on real PostgreSQL (PGlite); sync pipeline (idempotency, change detection,
   duplicates, partial failure, suspicious guards, missing-as-closed, overlap/orphan
@@ -522,6 +522,14 @@ Always attribute the source (`source`, `sourceUrl`) — TenderBase is not the pu
   region/search/cache-buster variants) and reports what actually changes; the
   *Probe the CIDB source* workflow runs it from a GitHub runner and commits the JSON
   report under `snapshots/<stamp>/feed-probe/`.
+- `npm run probe:site` — walks the whole source website (sitemaps, the tenders
+  section and its siblings, every referenced `.json` endpoint, the linked public
+  tender register) and diffs every bid number it finds against the ones the feed
+  publishes, so records that exist only elsewhere are named instead of guessed at.
+  Document links are recorded, never downloaded. The *Probe the CIDB site* workflow
+  runs it from a GitHub runner and commits the report under
+  `snapshots/<stamp>/site-probe/`; `--origin=http://127.0.0.1:PORT` smoke-tests it
+  offline.
 - `npm run verify:db` — run once against Neon to smoke-test every query path.
 - `npm run openapi:export` — regenerates `docs/openapi.yaml` from the live app
   (servers: the public deployment URL plus the relative `/api/v1`).
