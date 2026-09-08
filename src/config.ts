@@ -82,6 +82,17 @@ const envSchema = z.object({
    * where a human can actually see the tender.
    */
   CIDB_LISTING_URL: z.string().url().default('https://www.cidb.org.za/cidb-tenders/current-tenders/'),
+
+  /**
+   * Page size requested from the feed. The source paginates server-side
+   * (`?page=&limit=`) and offers 10/25/50/100 on the listing page; asking for
+   * the largest keeps a sync to one request while still paging when the total
+   * (`tender_count`) exceeds it.
+   */
+  CIDB_FEED_PAGE_SIZE: z.coerce.number().int().min(1).max(500).default(100),
+
+  /** Safety cap on feed pages followed in one sync. */
+  CIDB_FEED_MAX_PAGES: z.coerce.number().int().min(1).default(50),
   CIDB_SYNC_CRON: z.string().default('*/30 * * * *'),
   SYNC_ON_START: booleanish(true),
   MISSING_CLOSE_GRACE_DAYS: z.coerce.number().int().min(0).default(3),

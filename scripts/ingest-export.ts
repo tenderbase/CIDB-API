@@ -12,7 +12,9 @@
  *
  * Three source shapes are supported:
  *   • JSON feed (default, `…/tenders.json`) — what the public listing page
- *     renders from; one request returns every current tender.
+ *     renders from. It is paginated server-side (`?page=&limit=`, total in
+ *     `tender_count`), so every page is walked: `--limit` sets the page size
+ *     (the site offers 10/25/50/100), `--max-pages` caps the walk.
  *   • HTML listing — parsed with the same table parser as production and
  *     followed across pagination links (`--max-pages`).
  *   • `file:<path>` — offline replay of a captured feed or listing page (either
@@ -32,7 +34,8 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import * as cheerio from 'cheerio';
 import { isJsonFeedUrl } from '../src/cidb/factory.js';
-import { parseTendersJson, probeTendersJson } from '../src/cidb/jsonFeed.js';
+import { fetchFeedPages } from '../src/cidb/jsonConnector.js';
+import { feedDeclaredCount, parseFeedEntries, parseTendersJson, probeTendersJson } from '../src/cidb/jsonFeed.js';
 import { ensureUniqueExternalIds, normalizeParsedTender } from '../src/cidb/normalizer.js';
 import { parseCurrentTendersHtml } from '../src/cidb/parser.js';
 import { fetchHtml, fetchJson } from '../src/cidb/scraper.js';
@@ -47,6 +50,8 @@ const DEFAULT_MAX_PAGES = 25;
 
 interface Options {
   sourceUrl: string;
+  /** Page size requested from the paginated feed (the site offers 10/25/50/100). */
+  pageSize: number;
   /** Feed the data came from: provenance + base for resolving relative links. */
   feedUrl: string;
   attributionUrl: string;
@@ -77,6 +82,7 @@ function parseArgs(argv: string[]): Options {
         : DEFAULT_SOURCE_URL,
     feedUrl: DEFAULT_SOURCE_URL,
     attributionUrl: DEFAULT_ATTRIBUTION_URL,
+    pageSize: config.CIDB_FEED_PAGE_SIZE,
     maxPages: DEFAULT_MAX_PAGES,
     outDir: 'data',
     rawDir: 'artifacts/cidb-source',
@@ -97,6 +103,10 @@ function parseArgs(argv: string[]): Options {
         break;
       case 'attribute-url':
         if (value) options.attributionUrl = value;
+        break;
+      case 'limit':
+      case 'page-size':
+        options.pageSize = Math.max(1, Number.parseInt(value, 10) || options.pageSize);
         break;
       case 'max-pages':
         options.maxPages = Math.max(1, Number.parseInt(value, 10) || DEFAULT_MAX_PAGES);
@@ -190,23 +200,66 @@ async function ingestLocalFile(options: Options, pages: PageResult[], warnings: 
   console.log(`  snapshot (${isJson ? 'JSON feed' : 'HTML listing'}): ${parsed.length} rows from ${path}`);
   for (const row of parsed) rows.push({ row, pageUrl: options.attributionUrl, pageNumber: 1 });
   if (parsed.length === 0) warnings.push(`snapshot ${path} contained no usable tender rows`);
+  if (isJson) {
+    // A snapshot holds only the page(s) that were captured: say so when the feed
+    // declares more records than the file contains.
+    const payload = JSON.parse(content) as unknown;
+    const declared = feedDeclaredCount(payload);
+    const held = probeTendersJson(payload).rowCount;
+    if (declared !== null && held < declared) {
+      warnings.push(`snapshot holds ${held} of the ${declared} records the feed declares (partial capture)`);
+    }
+  }
 }
 
-/** Fetch the machine-readable feed: one request holds every current tender. */
+/**
+ * Fetch the machine-readable feed. It is paginated server-side, so walk every
+ * page (`?page=&limit=`) until the declared total is reached or a page adds
+ * nothing new.
+ */
 async function ingestJsonFeed(options: Options, pages: PageResult[], warnings: string[], rows: ParsedRow[]): Promise<void> {
-  const { raw, json } = await fetchJson(options.sourceUrl);
-  if (options.rawDir) writeFileSync(join(options.rawDir, 'tenders.json'), raw, 'utf8');
+  const raws: string[] = [];
+  const feed = await fetchFeedPages({
+    sourceUrl: options.sourceUrl,
+    pageSize: options.pageSize,
+    maxPages: options.maxPages,
+    delayMs: options.delayMs,
+    fetch: async (url) => {
+      const result = await fetchJson(url);
+      raws.push(result.raw);
+      return { json: result.json, raw: result.raw };
+    },
+    log: (message) => console.log(`  ${message}`),
+  });
 
-  const probe = probeTendersJson(json);
-  const parsed = parseTendersJson(json, options.sourceUrl, options.attributionUrl);
-  pages.push({ pageNumber: 1, url: options.sourceUrl, rows: parsed.length, bytes: raw.length });
+  const rawDir = options.rawDir;
+  if (rawDir) {
+    raws.forEach((raw, index) => {
+      const name = index === 0 ? 'tenders.json' : `tenders-page-${index + 1}.json`;
+      writeFileSync(join(rawDir, name), raw, 'utf8');
+    });
+  }
+
+  const parsed = parseFeedEntries(feed.entries, options.sourceUrl, options.attributionUrl);
+  for (const page of feed.pages) {
+    pages.push({ pageNumber: page.page, url: page.url, rows: page.rows, bytes: page.bytes });
+  }
+  const bytes = feed.pages.reduce((total, page) => total + page.bytes, 0);
   console.log(
-    `  feed: ${probe.rowCount} entries (${(raw.length / 1024).toFixed(0)} KB), ${parsed.length} usable` +
-      ` [feed declares tender_count=${probe.declaredCount ?? 'n/a'}]`,
+    `  feed: ${feed.entries.length} entries over ${feed.pages.length} page(s) ` +
+      `(${(bytes / 1024).toFixed(0)} KB), ${parsed.length} usable` +
+      ` [feed declares tender_count=${feed.declaredTotal ?? 'n/a'}]`,
   );
   for (const row of parsed) rows.push({ row, pageUrl: options.attributionUrl, pageNumber: 1 });
-  if (probe.rowCount !== parsed.length) {
-    warnings.push(`${probe.rowCount - parsed.length} feed entries had no usable content and were skipped`);
+  warnings.push(...feed.warnings);
+  if (feed.entries.length !== parsed.length) {
+    warnings.push(`${feed.entries.length - parsed.length} feed entries had no usable content and were skipped`);
+  }
+  if (feed.declaredTotal !== null && feed.entries.length < feed.declaredTotal) {
+    warnings.push(
+      `source declares ${feed.declaredTotal} tenders but ${feed.entries.length} were returned — ` +
+        `raise --limit/--max-pages or check the feed's paging parameters`,
+    );
   }
   if (parsed.length === 0) {
     warnings.push(`feed at ${options.sourceUrl} contained no usable tender entries`);

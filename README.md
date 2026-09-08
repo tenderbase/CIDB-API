@@ -92,7 +92,7 @@ TenderSourceConnector
 
 | Connector | Selected when | Notes |
 |---|---|---|
-| `CIDBJsonConnector` | URL path ends in `.json` (**default**) | The feed the CIDB website itself renders from: one request returns every record with `realstatus`, per-document timestamps and document links. |
+| `CIDBJsonConnector` | URL path ends in `.json` (**default**) | The feed the CIDB website itself renders from: every record with `realstatus`, per-document timestamps and document links. Paginated server-side, so all pages are walked. |
 | `CIDBHtmlConnector` | URL is an `http(s)` page | Server-rendered listing tables (`src/cidb/parser.ts`). |
 | `FileFixtureConnector` | URL starts with `file:` | Offline replay of a captured feed **or** listing page — same pipeline, frozen input. Local testing only. |
 
@@ -101,8 +101,19 @@ TenderSourceConnector
 > browser from `https://www.cidb.org.za/tenders.json` (`loadDataTable()` in the page
 > source). The HTML the server sends therefore has an empty `<tbody>`: scraping it
 > returns zero records, which the suspicious-result guards correctly refuse to write.
-> The feed is the authoritative dataset — 25 tenders and 86 document links at the time
-> of writing, including statuses the HTML page never exposes.
+> The feed is the authoritative dataset — it carries statuses the HTML page never
+> exposes, plus per-document timestamps and links embedded in each description.
+>
+> **The feed is paginated.** `loadDataTable()` requests it with
+> `{page, limit, search_item, region, status}` (`limit` is the page-size select:
+> 10/25/50/100) and builds its pager from `tender_count`, the total the server
+> declares. A single unparameterized request therefore returns only the first page —
+> 25 rows while `tender_count` said 33 — so `fetchFeedPages()` walks the pages,
+> merges them on the feed's own `tender_ID`, and stops when the declared total is
+> reached or a page adds nothing new (which also keeps it safe, and loud, if the
+> source ever ignores the paging parameters). Tune with `CIDB_FEED_PAGE_SIZE` /
+> `CIDB_FEED_MAX_PAGES`; a shortfall is reported as a sync warning rather than
+> silently under-collecting.
 
 A future `CIDBOfficialApiConnector` (or awarded/archived/cancelled connectors) can
 replace any of these without touching the public API or database model.
@@ -170,6 +181,8 @@ process heap and is not persisted. Production always uses `DB_MODE=postgres`
 | `CORS_ORIGIN` | api | — | Comma-separated allowlist, e.g. `https://tenderbase.app`. |
 | `CIDB_SOURCE_URL` | worker | `https://www.cidb.org.za/tenders.json` | Source to ingest: the machine-readable feed (default), an HTML listing, or `file:<path>` offline. Selects the connector. |
 | `CIDB_LISTING_URL` | worker | `https://www.cidb.org.za/cidb-tenders/current-tenders/` | Public page records are attributed to (the `sourceUrl` field in API responses). |
+| `CIDB_FEED_PAGE_SIZE` | worker | `100` | Records requested per feed page (`limit`). |
+| `CIDB_FEED_MAX_PAGES` | worker | `50` | Safety cap on feed pages walked per sync. |
 | `CIDB_SYNC_CRON` | worker | `*/30 * * * *` | Sync schedule (cron expression). |
 | `SYNC_ON_START` | worker | `true` | Run one sync immediately on boot. |
 | `API_SYNC_ON_START` | api | `false` | Run one sync when the API boots (dev convenience, usually with `DB_MODE=memory`). |
@@ -381,8 +394,9 @@ dataset instead of touching a database — useful for one-off extractions, sourc
 verification and CI artifacts:
 
 ```bash
-# live feed (default) → data/cidb-tenders-<date>.json|.csv + ingest-summary.json
+# live feed, all pages (default) → data/cidb-tenders-<date>.json|.csv + ingest-summary.json
 npx tsx scripts/ingest-export.ts
+npx tsx scripts/ingest-export.ts --limit=25 --max-pages=10   # smaller feed pages
 
 # replay a captured snapshot offline; keep the raw payload alongside the dataset
 npx tsx scripts/ingest-export.ts --url=file:./snapshots/<stamp>/source-html/tenders.json --raw=none
@@ -484,7 +498,7 @@ Always attribute the source (`source`, `sourceUrl`) — TenderBase is not the pu
 
 ## Testing & verification
 
-- `npm test` — 177 tests: feed mapper (statuses, documents, description HTML, probing),
+- `npm test` — 191 tests: feed mapper (statuses, documents, description HTML, probing),
   parser/normalizer/dates/grades/classes/hashing/retry/query/config units; migration DDL
   executed on real PostgreSQL (PGlite); sync pipeline (idempotency, change detection,
   duplicates, partial failure, suspicious guards, missing-as-closed, overlap/orphan
@@ -520,6 +534,7 @@ fully standard while allowing the whole suite to run anywhere.
 | Sync `FAILED` + `SOURCE_REQUEST_FAILED` | CIDB unreachable/blocked; check `CIDB_SOURCE_URL`, timeouts, retry settings. It retries with backoff automatically. |
 | Sync `FAILED` + `SOURCE_STRUCTURE_CHANGED` | CIDB changed the source; run `npm run test:cidb-live`, then update `src/cidb/jsonFeed.ts` (feed) or `src/cidb/parser.ts` (HTML) + fixtures. |
 | Sync discovers **0 records** from the listing page | Expected: `/cidb-tenders/current-tenders/` renders its rows in the browser, so the served HTML has an empty `<tbody>`. Ingest the feed instead — `CIDB_SOURCE_URL=https://www.cidb.org.za/tenders.json` (the default). |
+| Fewer tenders than the site shows | The feed paginates: `tender_count` declares the total, one page returns at most `limit` rows. Paging is automatic — check the sync warning, then raise `CIDB_FEED_PAGE_SIZE`/`CIDB_FEED_MAX_PAGES`. |
 | Sync `FAILED` + `SUSPICIOUS_*` | Scrape collapsed vs history; data untouched by design. Investigate source, then re-run. |
 | `409 SYNC_ALREADY_RUNNING` | A sync is in flight; poll `GET /admin/sync/history` instead. |
 | Prisma `P1001`/`P1000` on Render | Wrong `DATABASE_URL` or Neon sleeping/firewalled; verify with `verify:db`. |

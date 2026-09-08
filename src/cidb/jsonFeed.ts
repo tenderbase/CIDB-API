@@ -11,9 +11,14 @@ import { DiscoveredDocument, ParsedTender } from './types.js';
  * builds the same four columns this project's HTML parser expects
  * (Bid Number · Details · Date · Documents). Scraping the served HTML therefore
  * finds a correct table with zero rows. This module consumes that feed directly,
- * which is both complete (no pagination — one payload holds every record) and
- * richer: it carries `realstatus` (Open/Awarded/Closed), tender ids, per-document
- * timestamps and links embedded inside the description HTML.
+ * which is richer than the page: it carries `realstatus` (Open/Awarded/Closed),
+ * tender ids, per-document timestamps and links embedded inside the description HTML.
+ *
+ * The feed is SERVER-PAGINATED. `loadDataTable()` requests it with
+ * `{page, limit, search_item, region, status}` (`limit` comes from the page-size
+ * select: 10/25/50/100) and builds its pager from `tender_count`, the total the
+ * server declares. A bare request returns only the first page — e.g. 25 of 33 —
+ * so callers must page through it (see `feedPageUrl` + `fetchFeedPages`).
  *
  * Feed entry fields observed in production (all strings unless noted):
  *   tender_ID, user_ID, region, region_name, description (HTML), bid_number,
@@ -78,6 +83,48 @@ export function extractFeedEntries(payload: unknown): CidbFeedEntry[] {
     }
   }
   return [];
+}
+
+/** `tender_count` — how many records the source says exist in total. */
+export function feedDeclaredCount(payload: unknown): number | null {
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return null;
+  const raw = (payload as CidbFeed).tender_count;
+  const parsed = Number.parseInt(String(raw ?? ''), 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
+
+/**
+ * Stable identity for a feed entry, used to merge pages without double-counting.
+ * The feed's own `tender_ID` when present; otherwise bid number + description,
+ * which is what makes two rows the same tender on the listing.
+ */
+export function feedEntryKey(entry: CidbFeedEntry): string {
+  const id = entry.tender_ID ?? entry.tender_id;
+  if (id !== undefined && id !== null && String(id).trim() !== '') return `id:${String(id).trim()}`;
+  const bid = String(entry.bid_number ?? '').replace(/\s+/g, ' ').trim().toLowerCase();
+  const description = String(entry.description ?? '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 200);
+  return `bid:${bid}|${description}`;
+}
+
+/** Merge feed entries from several pages, keeping the first occurrence of each. */
+export function dedupeFeedEntries(entries: CidbFeedEntry[]): CidbFeedEntry[] {
+  const seen = new Map<string, CidbFeedEntry>();
+  for (const entry of entries) {
+    const key = feedEntryKey(entry);
+    if (!seen.has(key)) seen.set(key, entry);
+  }
+  return [...seen.values()];
+}
+
+/**
+ * Feed URL for one page. Preserves any query the caller already had (the site
+ * uses a `r=` cache-buster) and overrides `page`/`limit`.
+ */
+export function feedPageUrl(sourceUrl: string, options: { page?: number; limit?: number } = {}): string {
+  const url = new URL(sourceUrl);
+  if (options.page !== undefined) url.searchParams.set('page', String(options.page));
+  if (options.limit !== undefined) url.searchParams.set('limit', String(options.limit));
+  return url.toString();
 }
 
 const text = (value: unknown): string | null => {
@@ -196,19 +243,38 @@ export function mapFeedEntry(entry: CidbFeedEntry, feedUrl: string, attributionU
   };
 }
 
-/** Feed payload → parsed tenders (entries without any usable content are dropped). */
-export function parseTendersJson(payload: unknown, feedUrl: string, attributionUrl: string = feedUrl): ParsedTender[] {
-  return extractFeedEntries(payload)
+/** Feed entries → parsed tenders (entries without any usable content are dropped). */
+export function parseFeedEntries(
+  entries: CidbFeedEntry[],
+  feedUrl: string,
+  attributionUrl: string = feedUrl,
+): ParsedTender[] {
+  return entries
     .map((entry) => mapFeedEntry(entry, feedUrl, attributionUrl))
     .filter((parsed): parsed is ParsedTender => parsed !== null);
 }
 
+/** Feed payload → parsed tenders (single page; use `fetchFeedPages` for the whole source). */
+export function parseTendersJson(payload: unknown, feedUrl: string, attributionUrl: string = feedUrl): ParsedTender[] {
+  return parseFeedEntries(extractFeedEntries(payload), feedUrl, attributionUrl);
+}
+
 /** Structure probe used by health checks: is this still the feed we expect? */
-export function probeTendersJson(payload: unknown): { found: boolean; rowCount: number; declaredCount: string | null } {
+export function probeTendersJson(payload: unknown): {
+  found: boolean;
+  rowCount: number;
+  declaredCount: string | null;
+  declaredTotal: number | null;
+} {
   const entries = extractFeedEntries(payload);
   const declared =
     payload && typeof payload === 'object' && 'tender_count' in (payload as CidbFeed)
       ? text((payload as CidbFeed).tender_count)
       : null;
-  return { found: entries.length > 0, rowCount: entries.length, declaredCount: declared };
+  return {
+    found: entries.length > 0,
+    rowCount: entries.length,
+    declaredCount: declared,
+    declaredTotal: feedDeclaredCount(payload),
+  };
 }
