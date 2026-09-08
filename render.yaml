@@ -1,27 +1,21 @@
 # CIDB Tender API — service-owned Render Blueprint.
-#
-# This is the canonical deploy config for the CIDB services. It is written
-# standalone (no `rootDir`), so it works as-is if `cidb-api/` ever becomes
-# its own repository.
-#
-# NOTE: Render only auto-detects a Blueprint at the repo root, so while this
-# code lives in the tenderbaseapk monorepo, the same two services are also
-# declared in /render.yaml (with `rootDir: cidb-api` added). Keep both files
-# in sync — the root copy is what "New → Blueprint" actually deploys.
-#
-# Secrets (DATABASE_URL, API_KEY, ADMIN_API_KEY) are entered in the Render
-# dashboard at create time via `sync: false` — never committed here.
-#
+# Canonical config for the CIDB service(s); standalone (no `rootDir`), so it
+# works as-is if `cidb-api/` ever becomes its own repository.
+# NOTE: Render only auto-detects a Blueprint at the repo root, so the same
+# service is also declared in /render.yaml (with `rootDir: cidb-api` added).
+# Keep both files in sync — the root copy is what "New → Blueprint" deploys.
+# Secrets are entered in the Render dashboard at create time (never committed).
 # NOTE: `branch` pins the in-progress branch. After merging to main,
-# change both services to `branch: main` (or remove the line).
+# change to `branch: main` (or remove the line).
 services:
   # Public REST API: /api/v1/*, Swagger at /docs, health at /api/v1/health.
+  # Free plan = no credit card. Syncs via external scheduler (see /render.yaml).
   - type: web
     name: cidb-tender-api
     runtime: docker
     branch: arena/01a07d97-tenderbaseapk
     region: frankfurt
-    plan: starter
+    plan: free
     autoDeploy: true
     healthCheckPath: /api/v1/health
     dockerCommand: sh -c "npx prisma migrate deploy && node dist/api/server.js"
@@ -30,7 +24,7 @@ services:
         value: production
       - key: LOG_LEVEL
         value: info
-      # Neon DIRECT (non-pooler) connection string — same value as the worker.
+      # Neon DIRECT (non-pooler) connection string.
       - key: DATABASE_URL
         sync: false
       # Read-API secret (give this one to TenderBase as CIDB_API_KEY).
@@ -39,25 +33,3 @@ services:
       # Admin secret — must differ from API_KEY.
       - key: ADMIN_API_KEY
         sync: false
-
-  # Ingestion worker: scheduled CIDB sync every 30 min (+ one on boot).
-  # Background workers have no public URL and no health check by design.
-  - type: worker
-    name: cidb-tender-worker
-    runtime: docker
-    branch: arena/01a07d97-tenderbaseapk
-    region: frankfurt
-    plan: starter
-    autoDeploy: true
-    dockerCommand: sh -c "npx prisma migrate deploy && node dist/worker.js"
-    envVars:
-      - key: NODE_ENV
-        value: production
-      - key: LOG_LEVEL
-        value: info
-      - key: DATABASE_URL
-        sync: false
-      - key: CIDB_SYNC_CRON
-        value: "*/30 * * * *"
-      - key: SYNC_ON_START
-        value: "true"
