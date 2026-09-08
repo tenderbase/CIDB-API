@@ -58,4 +58,3 @@
     "start": "prisma migrate deploy && node dist/api/server.js"
   }
 }
-}
