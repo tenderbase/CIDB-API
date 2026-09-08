@@ -67,12 +67,28 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # The listing page renders its rows client-side from a machine-readable
+      # feed (see loadDataTable() in the page source), so capture that feed too:
+      # it is the authoritative dataset and the fixture source for tests.
+      - name: Capture the machine-readable feed
+        continue-on-error: true
+        run: |
+          mkdir -p artifacts/cidb-source
+          curl -sS --fail-with-body -L \
+            -A 'CIDB-Tender-API/1.0 (+https://github.com/tenderbase; contact: TenderBase data service)' \
+            -H 'Accept: application/json' \
+            'https://www.cidb.org.za/tenders.json' -o artifacts/cidb-source/tenders.json
+          echo "tenders.json bytes: $(wc -c < artifacts/cidb-source/tenders.json)"
+          head -c 1200 artifacts/cidb-source/tenders.json; echo
+
       - name: Ingest every page of the listing
         env:
           LOG_LEVEL: warn
           # Polite scraping: keep the configured delay and descriptive UA.
           CIDB_SOURCE_URL: ${{ inputs.source_url || 'https://www.cidb.org.za/cidb-tenders/current-tenders/' }}
+        shell: bash
         run: |
+          set -o pipefail   # a failed ingestion must fail the step, not just tee
           npx tsx scripts/ingest-export.ts \
             --url="${{ inputs.source_url || 'https://www.cidb.org.za/cidb-tenders/current-tenders/' }}" \
             --max-pages="${{ inputs.max_pages || 25 }}" \
@@ -97,7 +113,9 @@ jobs:
       # firewalled dev environments cannot download. Committing the snapshot to
       # the branch keeps the result readable through plain git/GitHub API.
       - name: Publish snapshot to the branch
-        if: ${{ github.event_name == 'push' || inputs.publish_snapshot }}
+        # Always publish: when the HTML pipeline finds nothing, the captured feed
+        # and the summary are exactly what explains why.
+        if: ${{ always() && (github.event_name == 'push' || inputs.publish_snapshot) }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
