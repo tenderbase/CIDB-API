@@ -4,26 +4,54 @@ openapi: 3.0.3
 info:
   title: CIDB Tender API
   version: 1.0.0
-  description: "Standalone normalized API over publicly available CIDB tender
-    information. Authenticate with the `X-API-Key` header. Source: Construction
-    Industry Development Board (CIDB)."
+  description: >-
+    Standalone normalized API over publicly available CIDB tender information.
+    Source: Construction Industry Development Board (CIDB).
+
+
+    ### Authentication
+
+
+    Every endpoint except `GET /health` and `GET /` needs an API key: click
+    **Authorize** and paste the key value (the `X-API-Key` header is added
+    automatically). Read endpoints accept any active key; `/admin/*` and
+    `/health/detailed` need an **ADMIN**-role key.
+
+
+    ### Errors
+
+
+    All failures use one envelope: `{ "error": { "code": "...", "message": "..."
+    } }` — `400` invalid request, `401` missing/invalid key, `403` admin key
+    required, `404` not found, `409` sync already running, `429` rate limited,
+    `500`/`503` service fault.
+
+
+    ### Rate limits
+
+
+    Global: 300 requests per 60s. Admin routes: 60 per 60s.
 components:
   securitySchemes:
     apiKey:
       type: apiKey
       name: X-API-Key
       in: header
-      description: API key issued for this service
+      description: API key issued for this service. Read endpoints accept any active
+        key; admin endpoints require an ADMIN-role key.
   schemas: {}
 paths:
   /health:
     get:
+      operationId: getHealth
+      summary: Liveness probe
       tags:
         - health
-      description: Public liveness probe. Returns 503 when the database is unreachable.
+      description: Public liveness probe — no API key required. This is the Render
+        health check path. Returns 503 when the database is unreachable.
       responses:
         "200":
-          description: Default Response
+          description: Service is up and the database answered.
           content:
             application/json:
               schema:
@@ -43,8 +71,33 @@ paths:
                   - database
                   - timestamp
                 additionalProperties: false
+                description: Service is up and the database answered.
+        "429":
+          description: Too many requests — the rate limit was exceeded; retry after the
+            window resets.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                      message:
+                        type: string
+                    required:
+                      - code
+                      - message
+                    additionalProperties: false
+                required:
+                  - error
+                additionalProperties: false
+                description: Too many requests — the rate limit was exceeded; retry after the
+                  window resets.
         "503":
-          description: Default Response
+          description: Service is up but the database is unreachable.
           content:
             application/json:
               schema:
@@ -64,16 +117,21 @@ paths:
                   - database
                   - timestamp
                 additionalProperties: false
+                description: Service is up but the database is unreachable.
   /health/detailed:
     get:
+      operationId: getDetailedHealth
+      summary: Detailed health
       tags:
         - health
-      description: Detailed service status. Requires an admin API key.
+      description: "Detailed service status: database latency, CIDB source
+        reachability, last sync run and record counts. Requires an ADMIN-role
+        API key."
       security:
         - apiKey: []
       responses:
         "200":
-          description: Default Response
+          description: Database, source, worker and record-count diagnostics.
           content:
             application/json:
               schema:
@@ -159,8 +217,10 @@ paths:
                   - worker
                   - records
                 additionalProperties: false
+                description: Database, source, worker and record-count diagnostics.
         "401":
-          description: Default Response
+          description: Unauthorized — the `X-API-Key` header is missing, unknown or
+            inactive.
           content:
             application/json:
               schema:
@@ -180,8 +240,10 @@ paths:
                 required:
                   - error
                 additionalProperties: false
+                description: Unauthorized — the `X-API-Key` header is missing, unknown or
+                  inactive.
         "403":
-          description: Default Response
+          description: Forbidden — the key is valid but does not have the ADMIN role.
           content:
             application/json:
               schema:
@@ -201,8 +263,35 @@ paths:
                 required:
                   - error
                 additionalProperties: false
+                description: Forbidden — the key is valid but does not have the ADMIN role.
+        "429":
+          description: Too many requests — the rate limit was exceeded; retry after the
+            window resets.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                      message:
+                        type: string
+                    required:
+                      - code
+                      - message
+                    additionalProperties: false
+                required:
+                  - error
+                additionalProperties: false
+                description: Too many requests — the rate limit was exceeded; retry after the
+                  window resets.
   /tenders:
     get:
+      operationId: listTenders
+      summary: List tenders
       tags:
         - tenders
       description: List tenders with search, filters, sorting and pagination.
@@ -214,6 +303,7 @@ paths:
           in: query
           name: page
           required: false
+          description: 1-based page number.
         - schema:
             type: integer
             minimum: 1
@@ -222,12 +312,15 @@ paths:
           in: query
           name: limit
           required: false
+          description: Page size, 1-100.
         - schema:
             type: string
             maxLength: 200
           in: query
           name: search
           required: false
+          description: Case-insensitive match on bid number, title, description,
+            organisation and location.
         - schema:
             type: string
             enum:
@@ -241,50 +334,64 @@ paths:
           in: query
           name: status
           required: false
+          description: Display status filter. OPEN also includes CLOSING_SOON rows.
         - schema:
             type: string
             maxLength: 100
           in: query
           name: province
           required: false
+          description: Exact province, case-insensitive (e.g. Gauteng).
         - schema:
             type: string
             maxLength: 20
           in: query
           name: cidbGrade
           required: false
+          description: CIDB contractor grade. A single grade also matches ranges
+            containing it (6 matches 5-7).
         - schema:
             type: string
             maxLength: 20
           in: query
           name: cidbClass
           required: false
+          description: CIDB class of works code (e.g. GB, CE, ME).
         - schema:
             type: string
             maxLength: 200
           in: query
           name: organisation
           required: false
+          description: Case-insensitive partial match on the organisation.
         - schema:
             type: string
           in: query
           name: publishedFrom
           required: false
+          description: Only tenders published on/after this date (ISO 8601, e.g.
+            2026-01-31 or 2026-01-31T00:00:00Z)
         - schema:
             type: string
           in: query
           name: publishedTo
           required: false
+          description: Only tenders published on/before this date (ISO 8601, e.g.
+            2026-01-31 or 2026-01-31T00:00:00Z)
         - schema:
             type: string
           in: query
           name: closingFrom
           required: false
+          description: Only tenders closing on/after this date (ISO 8601, e.g. 2026-01-31
+            or 2026-01-31T00:00:00Z)
         - schema:
             type: string
           in: query
           name: closingTo
           required: false
+          description: Only tenders closing on/before this date (ISO 8601, e.g. 2026-01-31
+            or 2026-01-31T00:00:00Z)
         - schema:
             type: string
             enum:
@@ -298,6 +405,7 @@ paths:
           in: query
           name: sort
           required: false
+          description: Sort field.
         - schema:
             type: string
             enum:
@@ -307,11 +415,12 @@ paths:
           in: query
           name: order
           required: false
+          description: Sort direction.
       security:
         - apiKey: []
       responses:
         "200":
-          description: Default Response
+          description: Paginated tenders matching the request.
           content:
             application/json:
               schema:
@@ -489,8 +598,9 @@ paths:
                   - data
                   - pagination
                 additionalProperties: false
+                description: Paginated tenders matching the request.
         "400":
-          description: Default Response
+          description: Bad request — a query or path parameter failed validation.
           content:
             application/json:
               schema:
@@ -510,8 +620,10 @@ paths:
                 required:
                   - error
                 additionalProperties: false
+                description: Bad request — a query or path parameter failed validation.
         "401":
-          description: Default Response
+          description: Unauthorized — the `X-API-Key` header is missing, unknown or
+            inactive.
           content:
             application/json:
               schema:
@@ -531,8 +643,36 @@ paths:
                 required:
                   - error
                 additionalProperties: false
+                description: Unauthorized — the `X-API-Key` header is missing, unknown or
+                  inactive.
+        "429":
+          description: Too many requests — the rate limit was exceeded; retry after the
+            window resets.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                      message:
+                        type: string
+                    required:
+                      - code
+                      - message
+                    additionalProperties: false
+                required:
+                  - error
+                additionalProperties: false
+                description: Too many requests — the rate limit was exceeded; retry after the
+                  window resets.
   /tenders/search:
     get:
+      operationId: searchTenders
+      summary: Search tenders
       tags:
         - tenders
       description: Full-text style search across bid number, title, description,
@@ -545,6 +685,8 @@ paths:
           in: query
           name: q
           required: true
+          description: Search text matched against bid number, title, description,
+            organisation and location.
         - schema:
             type: integer
             minimum: 1
@@ -552,6 +694,7 @@ paths:
           in: query
           name: page
           required: false
+          description: 1-based page number.
         - schema:
             type: integer
             minimum: 1
@@ -560,11 +703,12 @@ paths:
           in: query
           name: limit
           required: false
+          description: Page size, 1-100.
       security:
         - apiKey: []
       responses:
         "200":
-          description: Default Response
+          description: Paginated tenders matching the request.
           content:
             application/json:
               schema:
@@ -742,8 +886,9 @@ paths:
                   - data
                   - pagination
                 additionalProperties: false
+                description: Paginated tenders matching the request.
         "400":
-          description: Default Response
+          description: Bad request — a query or path parameter failed validation.
           content:
             application/json:
               schema:
@@ -763,8 +908,10 @@ paths:
                 required:
                   - error
                 additionalProperties: false
+                description: Bad request — a query or path parameter failed validation.
         "401":
-          description: Default Response
+          description: Unauthorized — the `X-API-Key` header is missing, unknown or
+            inactive.
           content:
             application/json:
               schema:
@@ -784,8 +931,36 @@ paths:
                 required:
                   - error
                 additionalProperties: false
+                description: Unauthorized — the `X-API-Key` header is missing, unknown or
+                  inactive.
+        "429":
+          description: Too many requests — the rate limit was exceeded; retry after the
+            window resets.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                      message:
+                        type: string
+                    required:
+                      - code
+                      - message
+                    additionalProperties: false
+                required:
+                  - error
+                additionalProperties: false
+                description: Too many requests — the rate limit was exceeded; retry after the
+                  window resets.
   /tenders/closing-soon:
     get:
+      operationId: listClosingSoonTenders
+      summary: Tenders closing soon
       tags:
         - tenders
       description: Open tenders with a closing date within the next N days.
@@ -798,6 +973,7 @@ paths:
           in: query
           name: days
           required: false
+          description: Look-ahead window in days (1-365).
         - schema:
             type: integer
             minimum: 1
@@ -805,6 +981,7 @@ paths:
           in: query
           name: page
           required: false
+          description: 1-based page number.
         - schema:
             type: integer
             minimum: 1
@@ -813,11 +990,12 @@ paths:
           in: query
           name: limit
           required: false
+          description: Page size, 1-100.
       security:
         - apiKey: []
       responses:
         "200":
-          description: Default Response
+          description: Paginated tenders matching the request.
           content:
             application/json:
               schema:
@@ -995,8 +1173,9 @@ paths:
                   - data
                   - pagination
                 additionalProperties: false
+                description: Paginated tenders matching the request.
         "400":
-          description: Default Response
+          description: Bad request — a query or path parameter failed validation.
           content:
             application/json:
               schema:
@@ -1016,8 +1195,10 @@ paths:
                 required:
                   - error
                 additionalProperties: false
+                description: Bad request — a query or path parameter failed validation.
         "401":
-          description: Default Response
+          description: Unauthorized — the `X-API-Key` header is missing, unknown or
+            inactive.
           content:
             application/json:
               schema:
@@ -1037,8 +1218,36 @@ paths:
                 required:
                   - error
                 additionalProperties: false
+                description: Unauthorized — the `X-API-Key` header is missing, unknown or
+                  inactive.
+        "429":
+          description: Too many requests — the rate limit was exceeded; retry after the
+            window resets.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                      message:
+                        type: string
+                    required:
+                      - code
+                      - message
+                    additionalProperties: false
+                required:
+                  - error
+                additionalProperties: false
+                description: Too many requests — the rate limit was exceeded; retry after the
+                  window resets.
   /tenders/province/{province}:
     get:
+      operationId: listTendersByProvince
+      summary: Tenders by province
       tags:
         - tenders
       description: Tenders for a single province (case-insensitive).
@@ -1050,6 +1259,7 @@ paths:
           in: query
           name: page
           required: false
+          description: 1-based page number.
         - schema:
             type: integer
             minimum: 1
@@ -1058,6 +1268,7 @@ paths:
           in: query
           name: limit
           required: false
+          description: Page size, 1-100.
         - schema:
             type: string
             minLength: 1
@@ -1065,11 +1276,12 @@ paths:
           in: path
           name: province
           required: true
+          description: Province name, case-insensitive (e.g. Gauteng).
       security:
         - apiKey: []
       responses:
         "200":
-          description: Default Response
+          description: Paginated tenders matching the request.
           content:
             application/json:
               schema:
@@ -1247,8 +1459,9 @@ paths:
                   - data
                   - pagination
                 additionalProperties: false
+                description: Paginated tenders matching the request.
         "400":
-          description: Default Response
+          description: Bad request — a query or path parameter failed validation.
           content:
             application/json:
               schema:
@@ -1268,8 +1481,10 @@ paths:
                 required:
                   - error
                 additionalProperties: false
+                description: Bad request — a query or path parameter failed validation.
         "401":
-          description: Default Response
+          description: Unauthorized — the `X-API-Key` header is missing, unknown or
+            inactive.
           content:
             application/json:
               schema:
@@ -1289,8 +1504,36 @@ paths:
                 required:
                   - error
                 additionalProperties: false
+                description: Unauthorized — the `X-API-Key` header is missing, unknown or
+                  inactive.
+        "429":
+          description: Too many requests — the rate limit was exceeded; retry after the
+            window resets.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                      message:
+                        type: string
+                    required:
+                      - code
+                      - message
+                    additionalProperties: false
+                required:
+                  - error
+                additionalProperties: false
+                description: Too many requests — the rate limit was exceeded; retry after the
+                  window resets.
   /tenders/grade/{grade}:
     get:
+      operationId: listTendersByGrade
+      summary: Tenders by CIDB grade
       tags:
         - tenders
       description: Tenders matching a CIDB grade. A single grade also matches ranges
@@ -1303,6 +1546,7 @@ paths:
           in: query
           name: page
           required: false
+          description: 1-based page number.
         - schema:
             type: integer
             minimum: 1
@@ -1311,6 +1555,7 @@ paths:
           in: query
           name: limit
           required: false
+          description: Page size, 1-100.
         - schema:
             type: string
             minLength: 1
@@ -1318,11 +1563,12 @@ paths:
           in: path
           name: grade
           required: true
+          description: CIDB contractor grade (e.g. 6 or 5-7).
       security:
         - apiKey: []
       responses:
         "200":
-          description: Default Response
+          description: Paginated tenders matching the request.
           content:
             application/json:
               schema:
@@ -1500,8 +1746,9 @@ paths:
                   - data
                   - pagination
                 additionalProperties: false
+                description: Paginated tenders matching the request.
         "400":
-          description: Default Response
+          description: Bad request — a query or path parameter failed validation.
           content:
             application/json:
               schema:
@@ -1521,8 +1768,10 @@ paths:
                 required:
                   - error
                 additionalProperties: false
+                description: Bad request — a query or path parameter failed validation.
         "401":
-          description: Default Response
+          description: Unauthorized — the `X-API-Key` header is missing, unknown or
+            inactive.
           content:
             application/json:
               schema:
@@ -1542,8 +1791,36 @@ paths:
                 required:
                   - error
                 additionalProperties: false
+                description: Unauthorized — the `X-API-Key` header is missing, unknown or
+                  inactive.
+        "429":
+          description: Too many requests — the rate limit was exceeded; retry after the
+            window resets.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                      message:
+                        type: string
+                    required:
+                      - code
+                      - message
+                    additionalProperties: false
+                required:
+                  - error
+                additionalProperties: false
+                description: Too many requests — the rate limit was exceeded; retry after the
+                  window resets.
   /tenders/class/{class}:
     get:
+      operationId: listTendersByClass
+      summary: Tenders by CIDB class
       tags:
         - tenders
       description: Tenders matching a CIDB class of works (e.g. GB, CE, ME).
@@ -1555,6 +1832,7 @@ paths:
           in: query
           name: page
           required: false
+          description: 1-based page number.
         - schema:
             type: integer
             minimum: 1
@@ -1563,6 +1841,7 @@ paths:
           in: query
           name: limit
           required: false
+          description: Page size, 1-100.
         - schema:
             type: string
             minLength: 1
@@ -1570,11 +1849,12 @@ paths:
           in: path
           name: class
           required: true
+          description: CIDB class of works code (e.g. GB, CE, ME).
       security:
         - apiKey: []
       responses:
         "200":
-          description: Default Response
+          description: Paginated tenders matching the request.
           content:
             application/json:
               schema:
@@ -1752,8 +2032,9 @@ paths:
                   - data
                   - pagination
                 additionalProperties: false
+                description: Paginated tenders matching the request.
         "400":
-          description: Default Response
+          description: Bad request — a query or path parameter failed validation.
           content:
             application/json:
               schema:
@@ -1773,8 +2054,10 @@ paths:
                 required:
                   - error
                 additionalProperties: false
+                description: Bad request — a query or path parameter failed validation.
         "401":
-          description: Default Response
+          description: Unauthorized — the `X-API-Key` header is missing, unknown or
+            inactive.
           content:
             application/json:
               schema:
@@ -1794,8 +2077,36 @@ paths:
                 required:
                   - error
                 additionalProperties: false
+                description: Unauthorized — the `X-API-Key` header is missing, unknown or
+                  inactive.
+        "429":
+          description: Too many requests — the rate limit was exceeded; retry after the
+            window resets.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                      message:
+                        type: string
+                    required:
+                      - code
+                      - message
+                    additionalProperties: false
+                required:
+                  - error
+                additionalProperties: false
+                description: Too many requests — the rate limit was exceeded; retry after the
+                  window resets.
   /tenders/{id}:
     get:
+      operationId: getTender
+      summary: Get one tender
       tags:
         - tenders
       description: Full tender detail including documents. Accepts the internal id or
@@ -1808,11 +2119,13 @@ paths:
           in: path
           name: id
           required: true
+          description: Internal tender id or the stable externalId (e.g.
+            CIDB-CIDB-004-2627).
       security:
         - apiKey: []
       responses:
         "200":
-          description: Default Response
+          description: Full tender detail, including its documents.
           content:
             application/json:
               schema:
@@ -1964,8 +2277,32 @@ paths:
                   - createdAt
                   - updatedAt
                 additionalProperties: false
+                description: Full tender detail, including its documents.
+        "400":
+          description: Bad request — a query or path parameter failed validation.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                      message:
+                        type: string
+                    required:
+                      - code
+                      - message
+                    additionalProperties: false
+                required:
+                  - error
+                additionalProperties: false
+                description: Bad request — a query or path parameter failed validation.
         "401":
-          description: Default Response
+          description: Unauthorized — the `X-API-Key` header is missing, unknown or
+            inactive.
           content:
             application/json:
               schema:
@@ -1985,8 +2322,10 @@ paths:
                 required:
                   - error
                 additionalProperties: false
+                description: Unauthorized — the `X-API-Key` header is missing, unknown or
+                  inactive.
         "404":
-          description: Default Response
+          description: Not found — no resource matches the request.
           content:
             application/json:
               schema:
@@ -2006,8 +2345,35 @@ paths:
                 required:
                   - error
                 additionalProperties: false
+                description: Not found — no resource matches the request.
+        "429":
+          description: Too many requests — the rate limit was exceeded; retry after the
+            window resets.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                      message:
+                        type: string
+                    required:
+                      - code
+                      - message
+                    additionalProperties: false
+                required:
+                  - error
+                additionalProperties: false
+                description: Too many requests — the rate limit was exceeded; retry after the
+                  window resets.
   /tenders/{id}/documents:
     get:
+      operationId: listTenderDocuments
+      summary: List tender documents
       tags:
         - documents
       description: Documents attached to a tender. Accepts the internal id or the
@@ -2020,11 +2386,13 @@ paths:
           in: path
           name: id
           required: true
+          description: Internal tender id or the stable externalId (e.g.
+            CIDB-CIDB-004-2627).
       security:
         - apiKey: []
       responses:
         "200":
-          description: Default Response
+          description: Documents attached to the tender.
           content:
             application/json:
               schema:
@@ -2077,8 +2445,32 @@ paths:
                     - createdAt
                     - updatedAt
                   additionalProperties: false
+                description: Documents attached to the tender.
+        "400":
+          description: Bad request — a query or path parameter failed validation.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                      message:
+                        type: string
+                    required:
+                      - code
+                      - message
+                    additionalProperties: false
+                required:
+                  - error
+                additionalProperties: false
+                description: Bad request — a query or path parameter failed validation.
         "401":
-          description: Default Response
+          description: Unauthorized — the `X-API-Key` header is missing, unknown or
+            inactive.
           content:
             application/json:
               schema:
@@ -2098,8 +2490,10 @@ paths:
                 required:
                   - error
                 additionalProperties: false
+                description: Unauthorized — the `X-API-Key` header is missing, unknown or
+                  inactive.
         "404":
-          description: Default Response
+          description: Not found — no resource matches the request.
           content:
             application/json:
               schema:
@@ -2119,8 +2513,35 @@ paths:
                 required:
                   - error
                 additionalProperties: false
+                description: Not found — no resource matches the request.
+        "429":
+          description: Too many requests — the rate limit was exceeded; retry after the
+            window resets.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                      message:
+                        type: string
+                    required:
+                      - code
+                      - message
+                    additionalProperties: false
+                required:
+                  - error
+                additionalProperties: false
+                description: Too many requests — the rate limit was exceeded; retry after the
+                  window resets.
   /stats:
     get:
+      operationId: getStats
+      summary: Aggregate statistics
       tags:
         - stats
       description: Aggregate tender counts, sync freshness and breakdowns by province,
@@ -2129,7 +2550,7 @@ paths:
         - apiKey: []
       responses:
         "200":
-          description: Default Response
+          description: Aggregate counts, sync freshness and breakdowns.
           content:
             application/json:
               schema:
@@ -2205,8 +2626,10 @@ paths:
                   - byGrade
                   - byClass
                 additionalProperties: false
+                description: Aggregate counts, sync freshness and breakdowns.
         "401":
-          description: Default Response
+          description: Unauthorized — the `X-API-Key` header is missing, unknown or
+            inactive.
           content:
             application/json:
               schema:
@@ -2226,17 +2649,47 @@ paths:
                 required:
                   - error
                 additionalProperties: false
+                description: Unauthorized — the `X-API-Key` header is missing, unknown or
+                  inactive.
+        "429":
+          description: Too many requests — the rate limit was exceeded; retry after the
+            window resets.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                      message:
+                        type: string
+                    required:
+                      - code
+                      - message
+                    additionalProperties: false
+                required:
+                  - error
+                additionalProperties: false
+                description: Too many requests — the rate limit was exceeded; retry after the
+                  window resets.
   /admin/sync:
     post:
+      operationId: triggerSync
+      summary: Trigger a sync
       tags:
         - admin
-      description: Trigger a CIDB synchronization. Runs asynchronously; poll GET
-        /admin/sync/:id for progress.
+      description: Trigger a CIDB synchronization. Runs asynchronously and returns 202
+        immediately — poll GET /admin/sync/{id} for progress. Syncs are
+        overlap-safe and idempotent, so retries are harmless.
       security:
         - apiKey: []
       responses:
         "202":
-          description: Default Response
+          description: Sync accepted and running in the background; poll GET
+            /admin/sync/{id} for progress.
           content:
             application/json:
               schema:
@@ -2250,8 +2703,11 @@ paths:
                   - status
                   - syncId
                 additionalProperties: false
+                description: Sync accepted and running in the background; poll GET
+                  /admin/sync/{id} for progress.
         "401":
-          description: Default Response
+          description: Unauthorized — the `X-API-Key` header is missing, unknown or
+            inactive.
           content:
             application/json:
               schema:
@@ -2271,8 +2727,10 @@ paths:
                 required:
                   - error
                 additionalProperties: false
+                description: Unauthorized — the `X-API-Key` header is missing, unknown or
+                  inactive.
         "403":
-          description: Default Response
+          description: Forbidden — the key is valid but does not have the ADMIN role.
           content:
             application/json:
               schema:
@@ -2292,8 +2750,9 @@ paths:
                 required:
                   - error
                 additionalProperties: false
+                description: Forbidden — the key is valid but does not have the ADMIN role.
         "409":
-          description: Default Response
+          description: Conflict — a synchronization is already running.
           content:
             application/json:
               schema:
@@ -2313,8 +2772,35 @@ paths:
                 required:
                   - error
                 additionalProperties: false
+                description: Conflict — a synchronization is already running.
+        "429":
+          description: Too many requests — the rate limit was exceeded; retry after the
+            window resets.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                      message:
+                        type: string
+                    required:
+                      - code
+                      - message
+                    additionalProperties: false
+                required:
+                  - error
+                additionalProperties: false
+                description: Too many requests — the rate limit was exceeded; retry after the
+                  window resets.
   /admin/sync/history:
     get:
+      operationId: listSyncHistory
+      summary: Sync history
       tags:
         - admin
       description: Recent synchronization runs, newest first.
@@ -2326,6 +2812,7 @@ paths:
           in: query
           name: page
           required: false
+          description: 1-based page number.
         - schema:
             type: integer
             minimum: 1
@@ -2334,6 +2821,7 @@ paths:
           in: query
           name: limit
           required: false
+          description: Page size, 1-100.
         - schema:
             type: string
             enum:
@@ -2344,11 +2832,12 @@ paths:
           in: query
           name: status
           required: false
+          description: Only return runs in this state.
       security:
         - apiKey: []
       responses:
         "200":
-          description: Default Response
+          description: Recent synchronization runs, newest first.
           content:
             application/json:
               schema:
@@ -2427,8 +2916,9 @@ paths:
                   - data
                   - pagination
                 additionalProperties: false
+                description: Recent synchronization runs, newest first.
         "400":
-          description: Default Response
+          description: Bad request — a query or path parameter failed validation.
           content:
             application/json:
               schema:
@@ -2448,8 +2938,10 @@ paths:
                 required:
                   - error
                 additionalProperties: false
+                description: Bad request — a query or path parameter failed validation.
         "401":
-          description: Default Response
+          description: Unauthorized — the `X-API-Key` header is missing, unknown or
+            inactive.
           content:
             application/json:
               schema:
@@ -2469,8 +2961,10 @@ paths:
                 required:
                   - error
                 additionalProperties: false
+                description: Unauthorized — the `X-API-Key` header is missing, unknown or
+                  inactive.
         "403":
-          description: Default Response
+          description: Forbidden — the key is valid but does not have the ADMIN role.
           content:
             application/json:
               schema:
@@ -2490,8 +2984,35 @@ paths:
                 required:
                   - error
                 additionalProperties: false
+                description: Forbidden — the key is valid but does not have the ADMIN role.
+        "429":
+          description: Too many requests — the rate limit was exceeded; retry after the
+            window resets.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                      message:
+                        type: string
+                    required:
+                      - code
+                      - message
+                    additionalProperties: false
+                required:
+                  - error
+                additionalProperties: false
+                description: Too many requests — the rate limit was exceeded; retry after the
+                  window resets.
   /admin/sync/{id}:
     get:
+      operationId: getSyncRun
+      summary: Get one sync run
       tags:
         - admin
       description: Status and counters for one synchronization run, including its most
@@ -2504,11 +3025,12 @@ paths:
           in: path
           name: id
           required: true
+          description: Sync run id returned by POST /admin/sync.
       security:
         - apiKey: []
       responses:
         "200":
-          description: Default Response
+          description: One synchronization run with its counters and most recent errors.
           content:
             application/json:
               schema:
@@ -2598,8 +3120,32 @@ paths:
                   - errorMessage
                   - recentErrors
                 additionalProperties: false
+                description: One synchronization run with its counters and most recent errors.
+        "400":
+          description: Bad request — a query or path parameter failed validation.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                      message:
+                        type: string
+                    required:
+                      - code
+                      - message
+                    additionalProperties: false
+                required:
+                  - error
+                additionalProperties: false
+                description: Bad request — a query or path parameter failed validation.
         "401":
-          description: Default Response
+          description: Unauthorized — the `X-API-Key` header is missing, unknown or
+            inactive.
           content:
             application/json:
               schema:
@@ -2619,8 +3165,10 @@ paths:
                 required:
                   - error
                 additionalProperties: false
+                description: Unauthorized — the `X-API-Key` header is missing, unknown or
+                  inactive.
         "403":
-          description: Default Response
+          description: Forbidden — the key is valid but does not have the ADMIN role.
           content:
             application/json:
               schema:
@@ -2640,8 +3188,9 @@ paths:
                 required:
                   - error
                 additionalProperties: false
+                description: Forbidden — the key is valid but does not have the ADMIN role.
         "404":
-          description: Default Response
+          description: Not found — no resource matches the request.
           content:
             application/json:
               schema:
@@ -2661,11 +3210,38 @@ paths:
                 required:
                   - error
                 additionalProperties: false
+                description: Not found — no resource matches the request.
+        "429":
+          description: Too many requests — the rate limit was exceeded; retry after the
+            window resets.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                      message:
+                        type: string
+                    required:
+                      - code
+                      - message
+                    additionalProperties: false
+                required:
+                  - error
+                additionalProperties: false
+                description: Too many requests — the rate limit was exceeded; retry after the
+                  window resets.
   /admin/errors:
     get:
+      operationId: listSyncErrors
+      summary: Recent ingestion errors
       tags:
         - admin
-      description: Recent ingestion errors across sync runs.
+      description: Recent ingestion errors across sync runs, newest first.
       parameters:
         - schema:
             type: integer
@@ -2674,6 +3250,7 @@ paths:
           in: query
           name: page
           required: false
+          description: 1-based page number.
         - schema:
             type: integer
             minimum: 1
@@ -2682,22 +3259,25 @@ paths:
           in: query
           name: limit
           required: false
+          description: Page size, 1-100.
         - schema:
             type: string
           in: query
           name: syncRunId
           required: false
+          description: Only errors recorded by this sync run.
         - schema:
             type: string
             maxLength: 100
           in: query
           name: stage
           required: false
+          description: Only errors from this pipeline stage (e.g. FETCH, PARSE).
       security:
         - apiKey: []
       responses:
         "200":
-          description: Default Response
+          description: Recent ingestion errors, newest first.
           content:
             application/json:
               schema:
@@ -2760,8 +3340,9 @@ paths:
                   - data
                   - pagination
                 additionalProperties: false
+                description: Recent ingestion errors, newest first.
         "400":
-          description: Default Response
+          description: Bad request — a query or path parameter failed validation.
           content:
             application/json:
               schema:
@@ -2781,8 +3362,10 @@ paths:
                 required:
                   - error
                 additionalProperties: false
+                description: Bad request — a query or path parameter failed validation.
         "401":
-          description: Default Response
+          description: Unauthorized — the `X-API-Key` header is missing, unknown or
+            inactive.
           content:
             application/json:
               schema:
@@ -2802,8 +3385,10 @@ paths:
                 required:
                   - error
                 additionalProperties: false
+                description: Unauthorized — the `X-API-Key` header is missing, unknown or
+                  inactive.
         "403":
-          description: Default Response
+          description: Forbidden — the key is valid but does not have the ADMIN role.
           content:
             application/json:
               schema:
@@ -2823,10 +3408,106 @@ paths:
                 required:
                   - error
                 additionalProperties: false
+                description: Forbidden — the key is valid but does not have the ADMIN role.
+        "429":
+          description: Too many requests — the rate limit was exceeded; retry after the
+            window resets.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                      message:
+                        type: string
+                    required:
+                      - code
+                      - message
+                    additionalProperties: false
+                required:
+                  - error
+                additionalProperties: false
+                description: Too many requests — the rate limit was exceeded; retry after the
+                  window resets.
+  /:
+    get:
+      operationId: getServiceIndex
+      summary: Service index
+      tags:
+        - meta
+      description: Public service index with links to the documentation, OpenAPI spec
+        and health probe. No API key required.
+      servers:
+        - url: https://cidb-tender-api.onrender.com
+          description: Service root
+      responses:
+        "200":
+          description: Service name, version and links to docs, health and the API.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  service:
+                    type: string
+                  version:
+                    type: string
+                  description:
+                    type: string
+                  docs:
+                    type: string
+                  openapi:
+                    type: string
+                  health:
+                    type: string
+                  api:
+                    type: string
+                required:
+                  - service
+                  - version
+                  - description
+                  - docs
+                  - openapi
+                  - health
+                  - api
+                additionalProperties: false
+                description: Service name, version and links to docs, health and the API.
+        "429":
+          description: Too many requests — the rate limit was exceeded; retry after the
+            window resets.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                      message:
+                        type: string
+                    required:
+                      - code
+                      - message
+                    additionalProperties: false
+                required:
+                  - error
+                additionalProperties: false
+                description: Too many requests — the rate limit was exceeded; retry after the
+                  window resets.
 servers:
+  - url: https://cidb-tender-api.onrender.com/api/v1
+    description: CIDB Tender API v1 (public deployment)
   - url: /api/v1
-    description: Current server (v1)
+    description: CIDB Tender API v1 (this origin)
 tags:
+  - name: meta
+    description: Service metadata (no API key required)
   - name: health
     description: Service health and status
   - name: tenders
@@ -2837,3 +3518,6 @@ tags:
     description: Aggregate statistics
   - name: admin
     description: Synchronization control (admin key required)
+externalDocs:
+  url: https://github.com/tenderbase/CIDB-API
+  description: Repository, ingestion pipeline and deployment notes

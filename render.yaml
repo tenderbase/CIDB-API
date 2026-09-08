@@ -24,6 +24,11 @@ services:
         value: production
       - key: LOG_LEVEL
         value: info
+      # Public origin of this service. Makes the OpenAPI document at /docs and
+      # docs/openapi.yaml advertise absolute server URLs (code generators,
+      # Postman, other clients). Keep in sync with the Render-generated URL.
+      - key: PUBLIC_BASE_URL
+        value: https://cidb-tender-api.onrender.com
       # Neon DIRECT (non-pooler) connection string.
       - key: DATABASE_URL
         sync: false
@@ -33,4 +38,9 @@ services:
       # Admin secret — must differ from API_KEY. Also used by the external
       # scheduler to trigger syncs.
       - key: ADMIN_API_KEY
+        sync: false
+      # Browser origins allowed to call this API (comma-separated), e.g. the
+      # TenderBase web app. Server-to-server callers send no Origin header and
+      # are always allowed; leaving this empty blocks cross-origin browser use.
+      - key: CORS_ORIGIN
         sync: false

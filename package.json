@@ -22,6 +22,8 @@
     "test:watch": "vitest",
     "test:cidb-live": "tsx scripts/cidb-live.ts",
     "openapi:export": "tsx scripts/export-openapi.ts",
+    "openapi:export:local": "tsx scripts/export-openapi.ts --relative",
+    "openapi:check": "tsx scripts/export-openapi.ts && git diff --exit-code docs/openapi.yaml",
     "keys:hash": "tsx scripts/hash-key.ts",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.scripts.json",
     "lint": "tsc --noEmit && tsc --noEmit -p tsconfig.scripts.json",
@@ -45,6 +47,7 @@
     "zod-to-json-schema": "^3.23.5"
   },
   "devDependencies": {
+    "@apidevtools/swagger-parser": "^10.1.0",
     "@electric-sql/pglite": "^0.5.8",
     "@types/node": "^20.17.10",
     "@types/node-cron": "^3.0.11",

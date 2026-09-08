@@ -8,15 +8,20 @@ import { executeSyncRun, startSyncRun, SyncAlreadyRunningError } from '../../ser
 import { logger } from '../../utils/logging.js';
 import { errorsQuerySchema, syncHistoryQuerySchema } from '../../schemas/admin.js';
 import {
-  errorSchema,
-  syncDetailResponseSchema,
-  syncErrorsResponseSchema,
-  syncHistoryResponseSchema,
-  syncStartResponseSchema,
+  adminErrorResponses,
+  badRequestErrorSchema,
+  conflictErrorSchema,
+  notFoundErrorSchema,
+  syncAcceptedSchema,
+  syncDetailOkSchema,
+  syncErrorsOkSchema,
+  syncHistoryOkSchema,
 } from '../../schemas/responses.js';
 import { errorEnvelope } from '../app.js';
 
-const syncIdParam = z.object({ id: z.string().min(1).max(100) });
+const syncIdParam = z.object({
+  id: z.string().min(1).max(100).describe('Sync run id returned by POST /admin/sync.'),
+});
 
 const strictRateLimit = {
   rateLimit: { max: config.ADMIN_RATE_LIMIT_MAX, timeWindow: config.ADMIN_RATE_LIMIT_WINDOW_MS },
@@ -33,9 +38,17 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
       config: strictRateLimit,
       schema: {
         tags: ['admin'],
-        description: 'Trigger a CIDB synchronization. Runs asynchronously; poll GET /admin/sync/:id for progress.',
+        summary: 'Trigger a sync',
+        operationId: 'triggerSync',
+        description:
+          'Trigger a CIDB synchronization. Runs asynchronously and returns 202 immediately — ' +
+          'poll GET /admin/sync/{id} for progress. Syncs are overlap-safe and idempotent, so retries are harmless.',
         security: [{ apiKey: [] }],
-        response: { 202: syncStartResponseSchema, 401: errorSchema, 403: errorSchema, 409: errorSchema },
+        response: {
+          202: syncAcceptedSchema,
+          409: conflictErrorSchema,
+          ...adminErrorResponses,
+        },
       },
     },
     async (_request, reply) => {
@@ -69,10 +82,16 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
       config: strictRateLimit,
       schema: {
         tags: ['admin'],
+        summary: 'Sync history',
+        operationId: 'listSyncHistory',
         description: 'Recent synchronization runs, newest first.',
         security: [{ apiKey: [] }],
         querystring: syncHistoryQuerySchema,
-        response: { 200: syncHistoryResponseSchema, 400: errorSchema, 401: errorSchema, 403: errorSchema },
+        response: {
+          200: syncHistoryOkSchema,
+          400: badRequestErrorSchema,
+          ...adminErrorResponses,
+        },
       },
     },
     async (request) => {
@@ -104,10 +123,17 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
       config: strictRateLimit,
       schema: {
         tags: ['admin'],
+        summary: 'Get one sync run',
+        operationId: 'getSyncRun',
         description: 'Status and counters for one synchronization run, including its most recent errors.',
         security: [{ apiKey: [] }],
         params: syncIdParam,
-        response: { 200: syncDetailResponseSchema, 401: errorSchema, 403: errorSchema, 404: errorSchema },
+        response: {
+          200: syncDetailOkSchema,
+          400: badRequestErrorSchema,
+          404: notFoundErrorSchema,
+          ...adminErrorResponses,
+        },
       },
     },
     async (request, reply) => {
@@ -133,10 +159,16 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
       config: strictRateLimit,
       schema: {
         tags: ['admin'],
-        description: 'Recent ingestion errors across sync runs.',
+        summary: 'Recent ingestion errors',
+        operationId: 'listSyncErrors',
+        description: 'Recent ingestion errors across sync runs, newest first.',
         security: [{ apiKey: [] }],
         querystring: errorsQuerySchema,
-        response: { 200: syncErrorsResponseSchema, 400: errorSchema, 401: errorSchema, 403: errorSchema },
+        response: {
+          200: syncErrorsOkSchema,
+          400: badRequestErrorSchema,
+          ...adminErrorResponses,
+        },
       },
     },
     async (request) => {

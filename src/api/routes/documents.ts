@@ -3,10 +3,17 @@ import { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { requireApiKey } from '../../auth/apiKey.js';
 import { listDocumentsByTender } from '../../services/documentService.js';
-import { errorSchema, tenderDocumentsResponseSchema } from '../../schemas/responses.js';
+import {
+  authedErrorResponses,
+  badRequestErrorSchema,
+  notFoundErrorSchema,
+  tenderDocumentsOkSchema,
+} from '../../schemas/responses.js';
 import { errorEnvelope } from '../app.js';
 
-const idParam = z.object({ id: z.string().min(1).max(100) });
+const idParam = z.object({
+  id: z.string().min(1).max(100).describe('Internal tender id or the stable externalId (e.g. CIDB-CIDB-004-2627).'),
+});
 
 export async function registerDocumentRoutes(app: FastifyInstance): Promise<void> {
   const r = app.withTypeProvider<ZodTypeProvider>();
@@ -17,10 +24,17 @@ export async function registerDocumentRoutes(app: FastifyInstance): Promise<void
     {
       schema: {
         tags: ['documents'],
+        summary: 'List tender documents',
+        operationId: 'listTenderDocuments',
         description: 'Documents attached to a tender. Accepts the internal id or the stable externalId.',
         security: [{ apiKey: [] }],
         params: idParam,
-        response: { 200: tenderDocumentsResponseSchema, 401: errorSchema, 404: errorSchema },
+        response: {
+          200: tenderDocumentsOkSchema,
+          400: badRequestErrorSchema,
+          404: notFoundErrorSchema,
+          ...authedErrorResponses,
+        },
       },
     },
     async (request, reply) => {
