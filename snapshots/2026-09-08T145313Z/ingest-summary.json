@@ -1,0 +1,23 @@
+{
+  "generatedAt": "2026-09-08T14:53:11.713Z",
+  "source": "https://www.cidb.org.za/cidb-tenders/current-tenders/",
+  "pagesFetched": 0,
+  "pages": [],
+  "rowsParsed": 0,
+  "tenders": 0,
+  "documents": 0,
+  "normalizeFailures": 0,
+  "byStatus": {},
+  "byProvince": {},
+  "byGrade": {},
+  "byTenderType": {},
+  "closingDates": {
+    "known": 0,
+    "unknown": 0,
+    "earliest": null,
+    "latest": null
+  },
+  "warnings": [
+    "page 1 parse failed: https://www.cidb.org.za/cidb-tenders/current-tenders/ — SOURCE_STRUCTURE_CHANGED: tender table found but contained zero data rows (content may now be JavaScript-rendered)"
+  ]
+}
