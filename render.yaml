@@ -1,19 +1,19 @@
-# CIDB Tender API — service-owned Render Blueprint.
-# Canonical config for the CIDB service(s); standalone (no `rootDir`), so it
-# works as-is if `cidb-api/` ever becomes its own repository.
-# NOTE: Render only auto-detects a Blueprint at the repo root, so the same
-# service is also declared in /render.yaml (with `rootDir: cidb-api` added).
-# Keep both files in sync — the root copy is what "New → Blueprint" deploys.
-# Secrets are entered in the Render dashboard at create time (never committed).
-# NOTE: `branch` pins the in-progress branch. After merging to main,
-# change to `branch: main` (or remove the line).
+# CIDB Tender API — Render Blueprint.
+# Deploy: Render Dashboard → New → Blueprint → select this repo (main branch).
+# Secrets (DATABASE_URL, API_KEY, ADMIN_API_KEY) are entered in the Render
+# dashboard at create time via `sync: false` — never committed here.
 services:
   # Public REST API: /api/v1/*, Swagger at /docs, health at /api/v1/health.
-  # Free plan = no credit card. Syncs via external scheduler (see /render.yaml).
+  # Free plan = no credit card required. Sleeps after 15 min idle (~30-60s
+  # cold start). Syncs are triggered by an external scheduler:
+  #   POST https://cidb-tender-api.onrender.com/api/v1/admin/sync
+  #   Header: X-API-Key: <ADMIN_API_KEY>   Every: 30 minutes
+  # (Background workers have no free tier, so this Blueprint ships the API
+  # only. The endpoint returns 202 and syncs in the background; syncs are
+  # overlap-safe and idempotent, so retries are harmless.)
   - type: web
     name: cidb-tender-api
     runtime: docker
-    branch: arena/01a07d97-tenderbaseapk
     region: frankfurt
     plan: free
     autoDeploy: true
@@ -30,6 +30,7 @@ services:
       # Read-API secret (give this one to TenderBase as CIDB_API_KEY).
       - key: API_KEY
         sync: false
-      # Admin secret — must differ from API_KEY.
+      # Admin secret — must differ from API_KEY. Also used by the external
+      # scheduler to trigger syncs.
       - key: ADMIN_API_KEY
         sync: false
