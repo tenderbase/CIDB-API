@@ -1,0 +1,55 @@
+{
+  "name": "cidb-tender-api",
+  "version": "1.0.0",
+  "description": "Standalone CIDB tender ingestion + normalized REST API. Consumed by TenderBase and other apps.",
+  "private": true,
+  "type": "commonjs",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "dev": "tsx watch src/api/server.ts",
+    "dev:worker": "tsx watch src/worker.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/api/server.js",
+    "worker": "node dist/worker.js",
+    "worker:once": "node dist/worker.js --once",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate deploy",
+    "prisma:migrate:dev": "prisma migrate dev",
+    "prisma:studio": "prisma studio",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:cidb-live": "tsx scripts/cidb-live.ts",
+    "openapi:export": "tsx scripts/export-openapi.ts",
+    "keys:hash": "tsx scripts/hash-key.ts",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.scripts.json",
+    "lint": "tsc --noEmit && tsc --noEmit -p tsconfig.scripts.json",
+    "verify:db": "tsx scripts/verify-db.ts"
+  },
+  "dependencies": {
+    "@fastify/cors": "^11.3.0",
+    "@fastify/helmet": "^13.1.1",
+    "@fastify/rate-limit": "^10.3.0",
+    "@fastify/swagger": "^9.8.1",
+    "@fastify/swagger-ui": "^5.2.6",
+    "@prisma/client": "^5.22.0",
+    "cheerio": "^1.0.0",
+    "fastify": "^5.2.1",
+    "fastify-type-provider-zod": "^4.0.2",
+    "node-cron": "^3.0.3",
+    "pino": "^9.6.0",
+    "prisma": "^5.22.0",
+    "yaml": "^2.6.1",
+    "zod": "^3.23.8",
+    "zod-to-json-schema": "^3.23.5"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8",
+    "@types/node": "^20.17.10",
+    "@types/node-cron": "^3.0.11",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}

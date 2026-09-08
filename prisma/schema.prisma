@@ -1,0 +1,174 @@
+// CIDB Tender API — Prisma schema (PostgreSQL / Neon).
+//
+// Production database: Neon PostgreSQL via DATABASE_URL.
+// Migrations: `prisma migrate dev` (local) / `prisma migrate deploy` (Railway).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TenderStatus {
+  OPEN
+  CLOSING_SOON
+  CLOSED
+  CANCELLED
+  AWARDED
+  ARCHIVED
+  UNKNOWN
+}
+
+enum SyncStatus {
+  RUNNING
+  COMPLETED
+  PARTIAL
+  FAILED
+}
+
+enum ApiKeyRole {
+  API
+  ADMIN
+}
+
+enum DownloadStatus {
+  NOT_DOWNLOADED
+  PENDING
+  DOWNLOADED
+  FAILED
+}
+
+model Tender {
+  id               String       @id @default(cuid())
+  source           String       @default("CIDB")
+  externalId       String
+  bidNumber        String?
+  title            String
+  description      String?      @db.Text
+  organisation     String?
+  province         String?
+  location         String?
+  municipality     String?
+  tenderType       String?
+  status           TenderStatus @default(UNKNOWN)
+  publishedDate    DateTime?
+  closingDate      DateTime?
+  briefingDate     DateTime?
+  briefingRequired Boolean      @default(false)
+  briefingLocation String?
+  cidbGrade        String?
+  cidbGradeRaw     String?
+  cidbClass        String[]     @default([])
+  cidbClassRaw     String?
+  estimatedValue   Decimal?     @db.Decimal(18, 2)
+  contactName      String?
+  contactEmail     String?
+  contactPhone     String?
+  sourceUrl        String
+  rawHash          String
+  rawData          Json
+  firstSeenAt      DateTime     @default(now())
+  lastSeenAt       DateTime     @default(now())
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  documents TenderDocument[]
+
+  @@unique([source, externalId])
+  @@index([source])
+  @@index([externalId])
+  @@index([bidNumber])
+  @@index([status])
+  @@index([province])
+  @@index([cidbGrade])
+  @@index([publishedDate])
+  @@index([closingDate])
+  @@index([createdAt])
+  @@index([updatedAt])
+  @@index([lastSeenAt])
+}
+
+model TenderDocument {
+  id             String         @id @default(cuid())
+  tenderId       String
+  name           String
+  documentType   String         @default("OTHER")
+  url            String
+  sourceUrl      String
+  fileName       String?
+  mimeType       String?
+  fileSize       Int?
+  contentHash    String?
+  downloadStatus DownloadStatus @default(NOT_DOWNLOADED)
+  downloadedAt   DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  tender Tender @relation(fields: [tenderId], references: [id], onDelete: Cascade)
+
+  @@unique([tenderId, url])
+  @@index([tenderId])
+  @@index([documentType])
+}
+
+model SyncRun {
+  id               String     @id @default(cuid())
+  source           String     @default("CIDB")
+  status           SyncStatus @default(RUNNING)
+  startedAt        DateTime   @default(now())
+  completedAt      DateTime?
+  recordsDiscovered Int       @default(0)
+  recordsCreated   Int        @default(0)
+  recordsUpdated   Int        @default(0)
+  recordsUnchanged Int        @default(0)
+  recordsFailed    Int        @default(0)
+  documentsFound   Int        @default(0)
+  errorCount       Int        @default(0)
+  durationMs       Int?
+  errorMessage     String?    @db.Text
+  createdAt        DateTime   @default(now())
+
+  errors SyncError[]
+
+  @@index([source])
+  @@index([status])
+  @@index([startedAt])
+  @@index([createdAt])
+}
+
+model SyncError {
+  id         String   @id @default(cuid())
+  syncRunId  String
+  externalId String?
+  url        String?
+  stage      String
+  errorType  String
+  message    String   @db.Text
+  stack      String?  @db.Text
+  retryCount Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  syncRun SyncRun @relation(fields: [syncRunId], references: [id], onDelete: Cascade)
+
+  @@index([syncRunId])
+  @@index([stage])
+  @@index([errorType])
+  @@index([createdAt])
+}
+
+model ApiKey {
+  id         String     @id @default(cuid())
+  name       String     @unique
+  keyHash    String     @unique
+  role       ApiKeyRole @default(API)
+  active     Boolean    @default(true)
+  lastUsedAt DateTime?
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  @@index([keyHash])
+  @@index([active])
+}

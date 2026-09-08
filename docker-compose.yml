@@ -1,0 +1,47 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: cidb
+      POSTGRES_PASSWORD: cidb
+      POSTGRES_DB: cidb
+    ports:
+      - "5432:5432"
+    volumes:
+      - cidb-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cidb"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build: .
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      DATABASE_URL: postgresql://cidb:cidb@postgres:5432/cidb?schema=public
+      API_KEY: ${API_KEY:-dev-api-key-change-me}
+      ADMIN_API_KEY: ${ADMIN_API_KEY:-dev-admin-key-change-me}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+    ports:
+      - "3000:3000"
+    command: sh -c "npx prisma migrate deploy && node dist/api/server.js"
+
+  worker:
+    build: .
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://cidb:cidb@postgres:5432/cidb?schema=public
+      CIDB_SOURCE_URL: ${CIDB_SOURCE_URL:-https://www.cidb.org.za/cidb-tenders/current-tenders/}
+      CIDB_SYNC_CRON: ${CIDB_SYNC_CRON:-*/30 * * * *}
+    command: sh -c "npx prisma migrate deploy && node dist/worker.js"
+
+volumes:
+  cidb-pgdata:
