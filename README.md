@@ -104,16 +104,26 @@ TenderSourceConnector
 > The feed is the authoritative dataset — it carries statuses the HTML page never
 > exposes, plus per-document timestamps and links embedded in each description.
 >
-> **The feed is paginated.** `loadDataTable()` requests it with
+> **The feed is paginated — in principle.** `loadDataTable()` requests it with
 > `{page, limit, search_item, region, status}` (`limit` is the page-size select:
 > 10/25/50/100) and builds its pager from `tender_count`, the total the server
-> declares. A single unparameterized request therefore returns only the first page —
-> 25 rows while `tender_count` said 33 — so `fetchFeedPages()` walks the pages,
-> merges them on the feed's own `tender_ID`, and stops when the declared total is
-> reached or a page adds nothing new (which also keeps it safe, and loud, if the
-> source ever ignores the paging parameters). Tune with `CIDB_FEED_PAGE_SIZE` /
-> `CIDB_FEED_MAX_PAGES`; a shortfall is reported as a sync warning rather than
-> silently under-collecting.
+> declares. `fetchFeedPages()` therefore walks the pages, merges them on the feed's
+> own `tender_ID`, and stops when the declared total is reached or a page adds
+> nothing new. Tune with `CIDB_FEED_PAGE_SIZE` / `CIDB_FEED_MAX_PAGES`.
+>
+> **Measured behaviour (2026-09-08, `npm run probe:feed`).** The endpoint currently
+> ignores every parameter: 15 variants — baseline, the site's `?r=` cache-buster, a
+> fresh one, `limit=10`, `page=2`, the exact jQuery parameter set, and the
+> `status`/`region`/`search_item` filters — all returned the byte-identical
+> 47,772-byte payload with the same 25 rows, while `tender_count` declared 33. So the
+> served file *is* the whole listing (the site's own pager is broken the same way for
+> a browser), and 8 declared records are simply not in it. Rather than guess, the
+> pipeline detects this: `fetchFeedPages()` stops when a page adds nothing new and
+> records `feed repeated page 2 with no new entries (paging parameters ignored?)` plus
+> `source declares 33 tenders but 25 were returned` as sync warnings, so a shortfall is
+> visible instead of silently under-collecting. If CIDB starts honouring `page`/`limit`,
+> the same code collects all of them with no change. Re-run the probe any time to see
+> whether that has happened.
 
 A future `CIDBOfficialApiConnector` (or awarded/archived/cancelled connectors) can
 replace any of these without touching the public API or database model.
@@ -506,7 +516,12 @@ Always attribute the source (`source`, `sourceUrl`) — TenderBase is not the pu
   (auth, validation, filters, pagination, serialization, admin lifecycle); OpenAPI contract
   suite (valid 3.0 document, summaries/tags/operationIds, real response descriptions,
   documented 401/403/404/409/429, `/docs`, `/docs/json`, `/docs/yaml`).
-- `npm run test:cidb-live` — optional manual probe of the live CIDB site.
+- `npm run test:cidb-live` — optional manual probe of the live CIDB source (works for
+  the feed or an HTML listing, whichever `CIDB_SOURCE_URL` selects).
+- `npm run probe:feed` — asks the feed the way the website does (page/limit/status/
+  region/search/cache-buster variants) and reports what actually changes; the
+  *Probe the CIDB source* workflow runs it from a GitHub runner and commits the JSON
+  report under `snapshots/<stamp>/feed-probe/`.
 - `npm run verify:db` — run once against Neon to smoke-test every query path.
 - `npm run openapi:export` — regenerates `docs/openapi.yaml` from the live app
   (servers: the public deployment URL plus the relative `/api/v1`).
@@ -534,7 +549,7 @@ fully standard while allowing the whole suite to run anywhere.
 | Sync `FAILED` + `SOURCE_REQUEST_FAILED` | CIDB unreachable/blocked; check `CIDB_SOURCE_URL`, timeouts, retry settings. It retries with backoff automatically. |
 | Sync `FAILED` + `SOURCE_STRUCTURE_CHANGED` | CIDB changed the source; run `npm run test:cidb-live`, then update `src/cidb/jsonFeed.ts` (feed) or `src/cidb/parser.ts` (HTML) + fixtures. |
 | Sync discovers **0 records** from the listing page | Expected: `/cidb-tenders/current-tenders/` renders its rows in the browser, so the served HTML has an empty `<tbody>`. Ingest the feed instead — `CIDB_SOURCE_URL=https://www.cidb.org.za/tenders.json` (the default). |
-| Fewer tenders than the site shows | The feed paginates: `tender_count` declares the total, one page returns at most `limit` rows. Paging is automatic — check the sync warning, then raise `CIDB_FEED_PAGE_SIZE`/`CIDB_FEED_MAX_PAGES`. |
+| Fewer tenders than `tender_count` declares | Run `npm run probe:feed` (CI: *Probe the CIDB source*). As of 2026-09-08 the endpoint ignores `page`/`limit`/`status`/`region`/`search_item` and serves one cached payload, so the declared total is unreachable — the warning `source declares N tenders but M were returned` is the source's bug, not ours. If the probe shows parameters being honoured again, paging picks the rest up automatically. |
 | Sync `FAILED` + `SUSPICIOUS_*` | Scrape collapsed vs history; data untouched by design. Investigate source, then re-run. |
 | `409 SYNC_ALREADY_RUNNING` | A sync is in flight; poll `GET /admin/sync/history` instead. |
 | Prisma `P1001`/`P1000` on Render | Wrong `DATABASE_URL` or Neon sleeping/firewalled; verify with `verify:db`. |
