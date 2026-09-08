@@ -3,7 +3,8 @@ name: Ingest CIDB tenders
 # Runs the real ingestion pipeline against the live CIDB website from a GitHub
 # runner (the sandbox/dev machines that cannot reach cidb.org.za still can).
 #
-# target=dataset  → fetch every listing page, normalize, upload JSON/CSV + raw HTML
+# target=dataset  → fetch the source feed (or crawl every listing page), normalize,
+#                   upload JSON/CSV + the raw payload
 # target=database → additionally run one sync into the configured DATABASE_URL
 #                   (requires the DATABASE_URL repository secret)
 #
@@ -21,11 +22,11 @@ on:
   workflow_dispatch:
     inputs:
       source_url:
-        description: 'CIDB listing to ingest'
+        description: 'CIDB source to ingest (machine-readable feed by default; an HTML listing also works)'
         required: false
-        default: 'https://www.cidb.org.za/cidb-tenders/current-tenders/'
+        default: 'https://www.cidb.org.za/tenders.json'
       max_pages:
-        description: 'Maximum listing pages to follow'
+        description: 'Maximum listing pages to follow (HTML crawl mode only)'
         required: false
         default: '25'
       target:
@@ -49,7 +50,7 @@ concurrency:
 
 jobs:
   ingest:
-    name: Fetch + normalize the live listing
+    name: Fetch + normalize the live source
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
@@ -81,16 +82,16 @@ jobs:
           echo "tenders.json bytes: $(wc -c < artifacts/cidb-source/tenders.json)"
           head -c 1200 artifacts/cidb-source/tenders.json; echo
 
-      - name: Ingest every page of the listing
+      - name: Ingest the live source
         env:
           LOG_LEVEL: warn
           # Polite scraping: keep the configured delay and descriptive UA.
-          CIDB_SOURCE_URL: ${{ inputs.source_url || 'https://www.cidb.org.za/cidb-tenders/current-tenders/' }}
+          CIDB_SOURCE_URL: ${{ inputs.source_url || 'https://www.cidb.org.za/tenders.json' }}
         shell: bash
         run: |
           set -o pipefail   # a failed ingestion must fail the step, not just tee
           npx tsx scripts/ingest-export.ts \
-            --url="${{ inputs.source_url || 'https://www.cidb.org.za/cidb-tenders/current-tenders/' }}" \
+            --url="${{ inputs.source_url || 'https://www.cidb.org.za/tenders.json' }}" \
             --max-pages="${{ inputs.max_pages || 25 }}" \
             --out=data --raw=artifacts/cidb-source | tee ingest.log
 
@@ -147,7 +148,7 @@ jobs:
           if-no-files-found: warn
           retention-days: 30
 
-      - name: Upload raw HTML snapshot
+      - name: Upload raw source snapshot
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -164,7 +165,7 @@ jobs:
     if: ${{ inputs.target == 'database' || inputs.target == 'both' }}
     env:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      CIDB_SOURCE_URL: ${{ inputs.source_url || 'https://www.cidb.org.za/cidb-tenders/current-tenders/' }}
+      CIDB_SOURCE_URL: ${{ inputs.source_url || 'https://www.cidb.org.za/tenders.json' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4

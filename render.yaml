@@ -29,6 +29,15 @@ services:
       # Postman, other clients). Keep in sync with the Render-generated URL.
       - key: PUBLIC_BASE_URL
         value: https://cidb-tender-api.onrender.com
+      # Source of tender records: the machine-readable feed the CIDB website
+      # renders its public listing from. The listing page builds its table in the
+      # browser, so its served HTML has an empty <tbody> and scraping it finds
+      # zero records — the feed returns every row, with statuses and documents.
+      - key: CIDB_SOURCE_URL
+        value: https://www.cidb.org.za/tenders.json
+      # Public page ingested records are attributed to (the API's sourceUrl field).
+      - key: CIDB_LISTING_URL
+        value: https://www.cidb.org.za/cidb-tenders/current-tenders/
       # Neon DIRECT (non-pooler) connection string.
       - key: DATABASE_URL
         sync: false

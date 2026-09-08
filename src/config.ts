@@ -58,12 +58,30 @@ const envSchema = z.object({
   API_KEY: z.string().default(''),
   ADMIN_API_KEY: z.string().default(''),
 
+  /**
+   * Source of tender records.
+   *
+   * Default is the machine-readable feed the CIDB website itself renders from
+   * (https://www.cidb.org.za/tenders.json). The human listing page
+   * (/cidb-tenders/current-tenders/) builds its table in the browser, so its
+   * served HTML contains an empty tbody — point CIDB_SOURCE_URL at it only for
+   * server-rendered listings.
+   */
   CIDB_SOURCE_URL: z
     .string()
-    .default('https://www.cidb.org.za/cidb-tenders/current-tenders/')
+    .default('https://www.cidb.org.za/tenders.json')
     .refine((v) => v.startsWith('file:') || /^https?:\/\/.+/.test(v), {
       message: 'Must be an http(s) URL, or file:<path> for offline testing',
     }),
+
+  /**
+   * Canonical public page every ingested record is attributed to.
+   *
+   * Kept separate from CIDB_SOURCE_URL because the feed is a machine-readable
+   * endpoint: users (and the API's `sourceUrl` field) should land on the page
+   * where a human can actually see the tender.
+   */
+  CIDB_LISTING_URL: z.string().url().default('https://www.cidb.org.za/cidb-tenders/current-tenders/'),
   CIDB_SYNC_CRON: z.string().default('*/30 * * * *'),
   SYNC_ON_START: booleanish(true),
   MISSING_CLOSE_GRACE_DAYS: z.coerce.number().int().min(0).default(3),

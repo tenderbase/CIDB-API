@@ -80,6 +80,23 @@ describe('parseConfig', () => {
     expect(cfg.MAX_DROP_RATIO).toBe(0.5);
   });
 
+  it('defaults the source to the machine-readable feed, with attribution kept separate', () => {
+    const cfg = parseConfig({});
+    // The public listing page builds its table in the browser (served HTML has an
+    // empty <tbody>), so the feed the page renders from is the ingestable default.
+    expect(cfg.CIDB_SOURCE_URL).toBe('https://www.cidb.org.za/tenders.json');
+    expect(cfg.CIDB_LISTING_URL).toBe('https://www.cidb.org.za/cidb-tenders/current-tenders/');
+  });
+
+  it('accepts an http(s) or file: source and rejects anything else', () => {
+    expect(parseConfig({ CIDB_SOURCE_URL: 'https://www.cidb.org.za/cidb-tenders/current-tenders/' }).CIDB_SOURCE_URL).toBe(
+      'https://www.cidb.org.za/cidb-tenders/current-tenders/',
+    );
+    expect(parseConfig({ CIDB_SOURCE_URL: 'file:./tests/fixtures/cidb-tenders.json' }).CIDB_SOURCE_URL).toMatch(/^file:/);
+    expect(() => parseConfig({ CIDB_SOURCE_URL: 'tenders.json' })).toThrow(/CIDB_SOURCE_URL/);
+    expect(() => parseConfig({ CIDB_LISTING_URL: 'not-a-url' })).toThrow(/CIDB_LISTING_URL/);
+  });
+
   it('validates PUBLIC_BASE_URL', () => {
     expect(parseConfig({}).PUBLIC_BASE_URL).toBe('');
     expect(parseConfig({ PUBLIC_BASE_URL: 'https://cidb-tender-api.onrender.com' }).PUBLIC_BASE_URL).toBe(

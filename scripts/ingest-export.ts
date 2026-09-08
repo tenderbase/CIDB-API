@@ -1,45 +1,72 @@
 /**
- * Ingest every tender currently published on the CIDB source listing and write
- * the normalized dataset to disk — without touching a database.
+ * Ingest every tender currently published by CIDB and write the normalized
+ * dataset to disk — without touching a database.
  *
- *   npm run ingest:export                       # live CIDB listing, all pages
- *   npx tsx scripts/ingest-export.ts --max-pages=20 --out=data
- *   npx tsx scripts/ingest-export.ts --url=https://www.cidb.org.za/cidb-tenders/awarded-tenders/
+ *   npm run ingest:export                       # live CIDB feed (all records)
+ *   npx tsx scripts/ingest-export.ts --out=data --raw=artifacts/cidb-source
+ *   npx tsx scripts/ingest-export.ts --url=https://www.cidb.org.za/cidb-tenders/current-tenders/
+ *   npx tsx scripts/ingest-export.ts --url=file:./snapshots/<stamp>/source-html/tenders.json --raw=none
  *
- * Runs the exact production pipeline (fetchHtml → parseCurrentTendersHtml →
- * normalizeParsedTender → ensureUniqueExternalIds), so the output matches what a
- * sync would write, and follows WordPress/Elementor pagination so "all tenders on
- * the source website" means every page, not just page 1.
+ * Runs the exact production pipeline (fetch → parse → normalizeParsedTender →
+ * ensureUniqueExternalIds), so the output matches what a sync writes.
+ *
+ * Three source shapes are supported:
+ *   • JSON feed (default, `…/tenders.json`) — what the public listing page
+ *     renders from; one request returns every current tender.
+ *   • HTML listing — parsed with the same table parser as production and
+ *     followed across pagination links (`--max-pages`).
+ *   • `file:<path>` — offline replay of a captured feed or listing page (either
+ *     format is detected automatically); `--feed-url` records where it came from.
  *
  * Outputs (default `--out=data`, git-ignored):
  *   data/cidb-tenders-<date>.json      normalized tenders (+ documents) + summary
  *   data/cidb-tenders-<date>.csv       flat spreadsheet view
- *   data/ingest-summary.json           counts, pages fetched, warnings
- *   artifacts/cidb-source/page-N.html  raw HTML snapshot (evidence / new fixtures)
+ *   data/ingest-summary.json           counts, breakdowns, warnings
+ *   artifacts/cidb-source/…            raw feed/HTML snapshot (evidence, fixtures)
  *
- * To load the same data into a real database instead, run the worker
+ * To load the data into a real database instead, run the worker
  * (`DATABASE_URL=... npm run worker:once`) or trigger the deployed service
  * (`curl -X POST -H "X-API-Key: $ADMIN_API_KEY" $CIDB_API_URL/api/v1/admin/sync`).
  */
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import * as cheerio from 'cheerio';
+import { isJsonFeedUrl } from '../src/cidb/factory.js';
+import { parseTendersJson, probeTendersJson } from '../src/cidb/jsonFeed.js';
 import { ensureUniqueExternalIds, normalizeParsedTender } from '../src/cidb/normalizer.js';
 import { parseCurrentTendersHtml } from '../src/cidb/parser.js';
-import { fetchHtml } from '../src/cidb/scraper.js';
+import { fetchHtml, fetchJson } from '../src/cidb/scraper.js';
 import { ParsedTender } from '../src/cidb/types.js';
 import { config } from '../src/config.js';
 import { NormalizedTender } from '../src/schemas/tender.js';
 
-const DEFAULT_SOURCE_URL = 'https://www.cidb.org.za/cidb-tenders/current-tenders/';
+const DEFAULT_SOURCE_URL = 'https://www.cidb.org.za/tenders.json';
+/** Public page the feed is rendered on — kept as the records' attribution URL. */
+const DEFAULT_ATTRIBUTION_URL = 'https://www.cidb.org.za/cidb-tenders/current-tenders/';
 const DEFAULT_MAX_PAGES = 25;
 
 interface Options {
   sourceUrl: string;
+  /** Feed the data came from: provenance + base for resolving relative links. */
+  feedUrl: string;
+  attributionUrl: string;
   maxPages: number;
   outDir: string;
   rawDir: string | null;
   delayMs: number;
+}
+
+interface PageResult {
+  pageNumber: number;
+  url: string;
+  rows: number;
+  bytes: number;
+}
+
+interface ParsedRow {
+  row: ParsedTender;
+  pageUrl: string;
+  pageNumber: number;
 }
 
 function parseArgs(argv: string[]): Options {
@@ -48,6 +75,8 @@ function parseArgs(argv: string[]): Options {
       process.env.CIDB_SOURCE_URL && !process.env.CIDB_SOURCE_URL.startsWith('file:')
         ? process.env.CIDB_SOURCE_URL
         : DEFAULT_SOURCE_URL,
+    feedUrl: DEFAULT_SOURCE_URL,
+    attributionUrl: DEFAULT_ATTRIBUTION_URL,
     maxPages: DEFAULT_MAX_PAGES,
     outDir: 'data',
     rawDir: 'artifacts/cidb-source',
@@ -62,6 +91,12 @@ function parseArgs(argv: string[]): Options {
     switch (flag) {
       case 'url':
         if (value) options.sourceUrl = value;
+        break;
+      case 'feed-url':
+        if (value) options.feedUrl = value;
+        break;
+      case 'attribute-url':
+        if (value) options.attributionUrl = value;
         break;
       case 'max-pages':
         options.maxPages = Math.max(1, Number.parseInt(value, 10) || DEFAULT_MAX_PAGES);
@@ -93,11 +128,7 @@ const PAGINATION_SELECTORS = [
   'a.next.page-numbers',
 ].join(', ');
 
-/**
- * Pagination links on a WordPress/Elementor listing page: numbered pages
- * (`?paged=N`, `/page/N/`) plus next anchors. Same-origin only, document links
- * excluded, in the order they appear on the page.
- */
+/** Pagination links on a WordPress/Elementor listing: same-origin, no documents. */
 function extractPageLinks(html: string, pageUrl: string): string[] {
   const $ = cheerio.load(html);
   const origin = new URL(pageUrl).origin;
@@ -119,19 +150,16 @@ function extractPageLinks(html: string, pageUrl: string): string[] {
   };
 
   $(PAGINATION_SELECTORS).each((_, anchor) => push($(anchor).attr('href')));
-
-  // Fall back to any anchor on the page carrying an explicit page marker.
   if (found.length === 0) {
     $('a[href]').each((_, anchor) => {
       const href = $(anchor).attr('href');
       if (href && /[?&]paged=\d+|\/page\/\d+\/?/i.test(href)) push(href);
     });
   }
-
   return found;
 }
 
-/** Ordering key so pages are fetched ascending (1, 2, 3 …) when numbered. */
+/** Ordering key so numbered pages are fetched ascending. */
 function pageKey(url: string): number {
   const paged = /[?&]paged=(\d+)/i.exec(url);
   if (paged) return Number.parseInt(paged[1], 10);
@@ -144,11 +172,98 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-interface PageResult {
-  pageNumber: number;
-  url: string;
-  rows: number;
-  bytes: number;
+/**
+ * Replay a captured source snapshot (`file:./path/tenders.json` or `.html`)
+ * through the identical pipeline — no network, useful for tests and for
+ * re-normalizing a feed captured elsewhere (e.g. by CI).
+ */
+async function ingestLocalFile(options: Options, pages: PageResult[], warnings: string[], rows: ParsedRow[]): Promise<void> {
+  const path = options.sourceUrl.slice('file:'.length);
+  const content = readFileSync(path, 'utf8');
+  const isJson = /\.json$/i.test(path) || /^[{[]/.test(content.trimStart());
+  // JSON snapshots resolve relative document links against the feed they came
+  // from (not the local path), and keep that feed URL on the audit trail.
+  const parsed = isJson
+    ? parseTendersJson(JSON.parse(content) as unknown, options.feedUrl, options.attributionUrl)
+    : parseCurrentTendersHtml(content, options.attributionUrl);
+  pages.push({ pageNumber: 1, url: options.sourceUrl, rows: parsed.length, bytes: content.length });
+  console.log(`  snapshot (${isJson ? 'JSON feed' : 'HTML listing'}): ${parsed.length} rows from ${path}`);
+  for (const row of parsed) rows.push({ row, pageUrl: options.attributionUrl, pageNumber: 1 });
+  if (parsed.length === 0) warnings.push(`snapshot ${path} contained no usable tender rows`);
+}
+
+/** Fetch the machine-readable feed: one request holds every current tender. */
+async function ingestJsonFeed(options: Options, pages: PageResult[], warnings: string[], rows: ParsedRow[]): Promise<void> {
+  const { raw, json } = await fetchJson(options.sourceUrl);
+  if (options.rawDir) writeFileSync(join(options.rawDir, 'tenders.json'), raw, 'utf8');
+
+  const probe = probeTendersJson(json);
+  const parsed = parseTendersJson(json, options.sourceUrl, options.attributionUrl);
+  pages.push({ pageNumber: 1, url: options.sourceUrl, rows: parsed.length, bytes: raw.length });
+  console.log(
+    `  feed: ${probe.rowCount} entries (${(raw.length / 1024).toFixed(0)} KB), ${parsed.length} usable` +
+      ` [feed declares tender_count=${probe.declaredCount ?? 'n/a'}]`,
+  );
+  for (const row of parsed) rows.push({ row, pageUrl: options.attributionUrl, pageNumber: 1 });
+  if (probe.rowCount !== parsed.length) {
+    warnings.push(`${probe.rowCount - parsed.length} feed entries had no usable content and were skipped`);
+  }
+  if (parsed.length === 0) {
+    warnings.push(`feed at ${options.sourceUrl} contained no usable tender entries`);
+  }
+}
+
+/** Follow a server-rendered HTML listing across its pagination links. */
+async function crawlHtmlListing(
+  options: Options,
+  pages: PageResult[],
+  warnings: string[],
+  rows: ParsedRow[],
+): Promise<void> {
+  const visited = new Set<string>();
+  let queue: string[] = [options.sourceUrl];
+
+  while (queue.length > 0 && pages.length < options.maxPages) {
+    const url = queue.shift() as string;
+    if (visited.has(url)) continue;
+    visited.add(url);
+    if (options.delayMs > 0 && pages.length > 0) await sleep(options.delayMs);
+
+    let html: string;
+    try {
+      html = (await fetchHtml(url)).html;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      warnings.push(`page fetch failed: ${url} — ${message}`);
+      console.error(`! fetch failed for ${url}: ${message}`);
+      break; // never publish a silently partial dataset
+    }
+
+    const pageNumber = pages.length + 1;
+    if (options.rawDir) writeFileSync(join(options.rawDir, `page-${pageNumber}.html`), html, 'utf8');
+
+    let parsed: ParsedTender[];
+    try {
+      parsed = parseCurrentTendersHtml(html, url);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      warnings.push(`page ${pageNumber} parse failed: ${url} — ${message}`);
+      console.error(`! parse failed for ${url}: ${message}`);
+      break;
+    }
+
+    pages.push({ pageNumber, url, rows: parsed.length, bytes: html.length });
+    console.log(`  page ${pageNumber}: ${parsed.length} rows (${(html.length / 1024).toFixed(0)} KB) ${url}`);
+    for (const row of parsed) rows.push({ row, pageUrl: url, pageNumber });
+
+    for (const link of extractPageLinks(html, url).sort((a, b) => pageKey(a) - pageKey(b))) {
+      if (!visited.has(link) && !queue.includes(link)) queue.push(link);
+    }
+  }
+
+  if (pages.length === options.maxPages && queue.length > 0) {
+    warnings.push(`stopped at --max-pages=${options.maxPages} with ${queue.length} page links still queued`);
+  }
 }
 
 const iso = (value: Date | null): string | null => (value ? value.toISOString() : null);
@@ -166,6 +281,7 @@ function toCsv(records: Array<Record<string, unknown>>): string {
     'title',
     'organisation',
     'status',
+    'sourceStatus',
     'province',
     'location',
     'tenderType',
@@ -186,6 +302,7 @@ function toCsv(records: Array<Record<string, unknown>>): string {
   for (const record of records) {
     const contact = record.contact as { name?: string | null; email?: string | null; phone?: string | null } | undefined;
     const documents = (record.documents ?? []) as Array<{ url: string }>;
+    const rawData = (record.rawData ?? {}) as { sourceStatusRaw?: string | null };
     lines.push(
       [
         record.externalId,
@@ -193,6 +310,7 @@ function toCsv(records: Array<Record<string, unknown>>): string {
         record.title,
         record.organisation,
         record.status,
+        rawData.sourceStatusRaw ?? '',
         record.province,
         record.location,
         record.tenderType,
@@ -224,56 +342,27 @@ async function main(): Promise<void> {
   mkdirSync(options.outDir, { recursive: true });
   if (options.rawDir) mkdirSync(options.rawDir, { recursive: true });
 
-  console.log(`Ingesting ${options.sourceUrl} (max ${options.maxPages} pages, ${options.delayMs}ms polite delay)`);
+  const kind = options.sourceUrl.startsWith('file:')
+    ? 'local snapshot'
+    : isJsonFeedUrl(options.sourceUrl)
+      ? 'JSON feed'
+      : 'HTML listing';
+  // Pagination + politeness only apply to the HTML crawl.
+  const crawlNotes =
+    kind === 'HTML listing' ? ` (max ${options.maxPages} pages, ${options.delayMs}ms polite delay)` : '';
+  console.log(`Ingesting ${kind}: ${options.sourceUrl}${crawlNotes}`);
 
-  // ── 1. Fetch every listing page ──────────────────────────────────────────
+  // ── 1. Fetch + parse ─────────────────────────────────────────────────────
   const pages: PageResult[] = [];
   const warnings: string[] = [];
-  const visited = new Set<string>();
-  const parsedRows: Array<{ row: ParsedTender; pageUrl: string; pageNumber: number }> = [];
-  let queue: string[] = [options.sourceUrl];
+  const parsedRows: ParsedRow[] = [];
 
-  while (queue.length > 0 && pages.length < options.maxPages) {
-    const url = queue.shift() as string;
-    if (visited.has(url)) continue;
-    visited.add(url);
-
-    if (options.delayMs > 0 && pages.length > 0) await sleep(options.delayMs);
-
-    let html: string;
-    try {
-      html = (await fetchHtml(url)).html;
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      warnings.push(`page fetch failed: ${url} — ${message}`);
-      console.error(`! fetch failed for ${url}: ${message}`);
-      break; // never publish a silently partial dataset
-    }
-
-    const pageNumber = pages.length + 1;
-    if (options.rawDir) writeFileSync(join(options.rawDir, `page-${pageNumber}.html`), html, 'utf8');
-
-    let parsed: ParsedTender[];
-    try {
-      parsed = parseCurrentTendersHtml(html, url);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      warnings.push(`page ${pageNumber} parse failed: ${url} — ${message}`);
-      console.error(`! parse failed for ${url}: ${message}`);
-      break;
-    }
-
-    pages.push({ pageNumber, url, rows: parsed.length, bytes: html.length });
-    console.log(`  page ${pageNumber}: ${parsed.length} rows (${(html.length / 1024).toFixed(0)} KB) ${url}`);
-    for (const row of parsed) parsedRows.push({ row, pageUrl: url, pageNumber });
-
-    for (const link of extractPageLinks(html, url).sort((a, b) => pageKey(a) - pageKey(b))) {
-      if (!visited.has(link) && !queue.includes(link)) queue.push(link);
-    }
-  }
-
-  if (pages.length === options.maxPages && queue.length > 0) {
-    warnings.push(`stopped at --max-pages=${options.maxPages} with ${queue.length} page links still queued`);
+  if (options.sourceUrl.startsWith('file:')) {
+    await ingestLocalFile(options, pages, warnings, parsedRows);
+  } else if (isJsonFeedUrl(options.sourceUrl)) {
+    await ingestJsonFeed(options, pages, warnings, parsedRows);
+  } else {
+    await crawlHtmlListing(options, pages, warnings, parsedRows);
   }
 
   // ── 2. Normalize (identical to the sync pipeline) ────────────────────────
@@ -348,10 +437,15 @@ async function main(): Promise<void> {
     .map((record) => record.closingDate)
     .filter((value): value is string => Boolean(value))
     .sort();
+  const publishedDates = records
+    .map((record) => record.publishedDate)
+    .filter((value): value is string => Boolean(value))
+    .sort();
 
   const summary = {
     generatedAt: startedAt.toISOString(),
     source: options.sourceUrl,
+    sourceKind: kind,
     pagesFetched: pages.length,
     pages,
     rowsParsed: parsedRows.length,
@@ -362,6 +456,10 @@ async function main(): Promise<void> {
     byProvince: countBy((record) => record.province),
     byGrade: countBy((record) => record.cidbGrade),
     byTenderType: countBy((record) => record.tenderType),
+    publishedDates: {
+      earliest: publishedDates[0] ?? null,
+      latest: publishedDates[publishedDates.length - 1] ?? null,
+    },
     closingDates: {
       known: closingDates.length,
       unknown: records.length - closingDates.length,
@@ -379,13 +477,14 @@ async function main(): Promise<void> {
   writeFileSync(summaryPath, `${JSON.stringify(summary, null, 2)}\n`, 'utf8');
 
   console.log('');
-  console.log(`Pages fetched    : ${pages.length}`);
+  console.log(`Source           : ${kind} (${pages.length} request(s))`);
   console.log(`Rows parsed      : ${parsedRows.length}`);
   console.log(`Tenders (unique) : ${records.length}`);
   console.log(`Documents        : ${summary.documents}`);
   console.log(`By status        : ${JSON.stringify(summary.byStatus)}`);
   console.log(`By province      : ${JSON.stringify(summary.byProvince)}`);
-  console.log(`Closing dates    : ${closingDates[0] ?? 'n/a'} → ${closingDates[closingDates.length - 1] ?? 'n/a'}`);
+  console.log(`Published        : ${publishedDates[0] ?? 'n/a'} → ${publishedDates[publishedDates.length - 1] ?? 'n/a'}`);
+  console.log(`Closing dates    : ${closingDates.length} known, ${records.length - closingDates.length} not published`);
   if (warnings.length > 0) console.log(`Warnings         : ${warnings.length} (details in ${summaryPath})`);
   console.log(`JSON             : ${jsonPath}`);
   console.log(`CSV              : ${csvPath}`);
@@ -401,5 +500,3 @@ main().catch((error) => {
   console.error(error instanceof Error ? (error.stack ?? error.message) : String(error));
   process.exit(1);
 });
-
-// (no-op change to re-trigger the path-filtered ingest workflow)

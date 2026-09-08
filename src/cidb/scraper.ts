@@ -19,6 +19,14 @@ export interface FetchResult {
   attempts: number;
 }
 
+export interface FetchJsonResult {
+  json: unknown;
+  raw: string;
+  status: number;
+  finalUrl: string;
+  attempts: number;
+}
+
 function httpError(status: number, url: string): SourceRequestError {
   const error = new SourceRequestError(`CIDB request failed with HTTP ${status} for ${url}`, status);
   return error;
@@ -111,4 +119,26 @@ export async function fetchHtml(url: string, options: FetchOptions = {}): Promis
   );
 
   return { html, status: 200, finalUrl: url, attempts };
+}
+
+/**
+ * Polite JSON fetch for the machine-readable CIDB feed (tenders.json).
+ *
+ * Same guarantees as fetchHtml — descriptive User-Agent, timeout, retry with
+ * exponential backoff — plus a parse guard: a feed that stops being valid JSON
+ * is a source-structure change, not an empty result.
+ */
+export async function fetchJson(url: string, options: FetchOptions = {}): Promise<FetchJsonResult> {
+  const result = await fetchHtml(url, options);
+  let json: unknown;
+  try {
+    json = JSON.parse(result.html) as unknown;
+  } catch (error) {
+    throw new SourceRequestError(
+      `SOURCE_STRUCTURE_CHANGED: ${url} did not return valid JSON (${
+        error instanceof Error ? error.message : String(error)
+      })`,
+    );
+  }
+  return { json, raw: result.html, status: result.status, finalUrl: result.finalUrl, attempts: result.attempts };
 }

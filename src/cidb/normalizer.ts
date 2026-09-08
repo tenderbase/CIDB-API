@@ -365,6 +365,21 @@ export function deriveStatus(input: {
   return 'OPEN';
 }
 
+/**
+ * Read a source-declared status carried in `ParsedTender.extra` (the JSON feed
+ * publishes `realstatus`: Open / Awarded / Closed). Anything unrecognized is
+ * ignored so inference still applies.
+ */
+export function mapExtraSourceStatus(extra: Record<string, unknown> | undefined): TenderStatusValue | null {
+  const direct = extra?.sourceStatus;
+  if (typeof direct === 'string' && TERMINAL_OR_KNOWN_STATUSES.includes(direct as TenderStatusValue)) {
+    return direct as TenderStatusValue;
+  }
+  return null;
+}
+
+const TERMINAL_OR_KNOWN_STATUSES: TenderStatusValue[] = ['OPEN', 'CLOSING_SOON', 'CLOSED', 'CANCELLED', 'AWARDED', 'ARCHIVED'];
+
 // ─── Main entry ────────────────────────────────────────────────────────────
 
 export interface NormalizeOptions {
@@ -396,7 +411,10 @@ export function normalizeParsedTender(parsed: ParsedTender, options: NormalizeOp
   const contact = extractContact(combinedText);
   const briefing = extractBriefing(combinedText);
   const tenderType = inferTenderType(combinedText);
-  const status = deriveStatus({ closingDate, closingSoonDays, now });
+  // The feed states Open/Awarded/Closed per record; trust it for terminal states
+  // instead of inferring from a closing date the source does not publish.
+  const sourceStatus = mapExtraSourceStatus(parsed.extra);
+  const status = deriveStatus({ sourceStatus, closingDate, closingSoonDays, now });
 
   // Documents: classify, enrich, dedupe by URL (keep first occurrence).
   const seenUrls = new Set<string>();
@@ -420,6 +438,9 @@ export function normalizeParsedTender(parsed: ParsedTender, options: NormalizeOp
     descriptionRaw: parsed.description,
     sourceUrl: parsed.sourceUrl,
     documentUrls: parsed.documents.map((d) => ({ label: d.label, url: d.url })),
+    sourceStatus: sourceStatus ?? null,
+    sourceStatusRaw: typeof parsed.extra?.sourceStatusRaw === 'string' ? parsed.extra.sourceStatusRaw : null,
+    sourceExtra: parsed.extra ?? {},
     inferred: { province, tenderType, closingDate: closingDate?.toISOString() ?? null },
   };
   const rawHash = contentHash({

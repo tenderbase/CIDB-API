@@ -20,9 +20,10 @@ of this service.
 
 ```text
              ┌──────────────────────┐
-             │         CIDB         │  https://www.cidb.org.za/cidb-tenders/current-tenders/
+             │         CIDB         │  feed:    https://www.cidb.org.za/tenders.json
+             │                      │  listing: https://www.cidb.org.za/cidb-tenders/current-tenders/
              └──────────┬───────────┘
-                        │ scrape (polite: UA, timeouts, backoff)
+                        │ fetch (polite: UA, timeouts, backoff)
                         ▼
              ┌──────────────────────┐
              │  CIDB Worker         │  discover → fetch → parse → normalize → sync
@@ -58,7 +59,7 @@ CIDB-API/                     (repository root)
 ├── src/
 │   ├── api/            Fastify app, server entry, routes (health/tenders/documents/stats/admin)
 │   ├── auth/           X-API-Key authentication (hashed keys, API vs ADMIN roles)
-│   ├── cidb/           connector abstraction + HTML scraper/parser/normalizer
+│   ├── cidb/           connector abstraction + JSON-feed & HTML parsers + normalizer
 │   ├── database/       lazy Prisma client + structural DbClient contract
 │   ├── services/       tender/document/sync/stats business logic
 │   ├── jobs/           node-cron schedule (overlap-safe)
@@ -67,7 +68,7 @@ CIDB-API/                     (repository root)
 │   ├── config.ts       validated environment configuration
 │   └── worker.ts       worker entrypoint (scheduled ingestion loop)
 ├── prisma/             schema.prisma + migrations (0001_init)
-├── tests/              unit + integration + HTML fixtures
+├── tests/              unit + integration + source fixtures (captured feed + HTML)
 ├── scripts/            cidb-live probe, openapi export, key hashing, db verify
 ├── docs/openapi.yaml   generated API reference (npm run openapi:export)
 ├── .github/workflows/  CI: typecheck → tests → OpenAPI drift check
@@ -80,16 +81,31 @@ CIDB-API/                     (repository root)
 
 ```text
 TenderSourceConnector
-  ├── discover()      find raw records on the source listing
+  ├── discover()      find raw records on the source
   ├── fetch()         enrich one record (pass-through when the listing is complete)
-  ├── parse()         listing HTML → structured ParsedTender
+  ├── parse()         source payload → structured ParsedTender
   ├── normalize()     ParsedTender → validated NormalizedTender
   └── healthCheck()   source reachability + structure probe
 ```
 
-V1 ships `CIDBHtmlConnector` (current-tenders listing). A future
-`CIDBOfficialApiConnector` (or awarded/archived/cancelled connectors) can replace it
-without touching the public API or database model.
+`createConnector()` picks the implementation from `CIDB_SOURCE_URL`:
+
+| Connector | Selected when | Notes |
+|---|---|---|
+| `CIDBJsonConnector` | URL path ends in `.json` (**default**) | The feed the CIDB website itself renders from: one request returns every record with `realstatus`, per-document timestamps and document links. |
+| `CIDBHtmlConnector` | URL is an `http(s)` page | Server-rendered listing tables (`src/cidb/parser.ts`). |
+| `FileFixtureConnector` | URL starts with `file:` | Offline replay of a captured feed **or** listing page — same pipeline, frozen input. Local testing only. |
+
+> **Why the feed is the default.** The public page
+> `https://www.cidb.org.za/cidb-tenders/current-tenders/` builds its table in the
+> browser from `https://www.cidb.org.za/tenders.json` (`loadDataTable()` in the page
+> source). The HTML the server sends therefore has an empty `<tbody>`: scraping it
+> returns zero records, which the suspicious-result guards correctly refuse to write.
+> The feed is the authoritative dataset — 25 tenders and 86 document links at the time
+> of writing, including statuses the HTML page never exposes.
+
+A future `CIDBOfficialApiConnector` (or awarded/archived/cancelled connectors) can
+replace any of these without touching the public API or database model.
 
 ---
 
@@ -120,10 +136,13 @@ ingest a frozen CIDB listing file through the exact same pipeline:
 
 ```bash
 PORT=3000 DB_MODE=memory \
-CIDB_SOURCE_URL='file:./tests/fixtures/cidb-current.html' \
+CIDB_SOURCE_URL='file:./tests/fixtures/cidb-tenders.json' \
 API_SYNC_ON_START=true API_KEY=test-api-key ADMIN_API_KEY=test-admin-key \
 CORS_ORIGIN='*' npm run dev
 ```
+
+Both fixture formats work — `tests/fixtures/cidb-tenders.json` is a snapshot of the
+live feed, `tests/fixtures/cidb-current.html` a captured listing page.
 
 Then:
 
@@ -149,7 +168,8 @@ process heap and is not persisted. Production always uses `DB_MODE=postgres`
 | `PORT` | api | `3000` | Listen port (Render injects this). |
 | `PUBLIC_BASE_URL` | api | — | Public origin, e.g. `https://cidb-tender-api.onrender.com`. Advertised in the OpenAPI `servers` at `/docs` (absolute URLs for external clients); empty keeps the relative `/api/v1` server. |
 | `CORS_ORIGIN` | api | — | Comma-separated allowlist, e.g. `https://tenderbase.app`. |
-| `CIDB_SOURCE_URL` | worker | CIDB current-tenders URL | Source listing to ingest. |
+| `CIDB_SOURCE_URL` | worker | `https://www.cidb.org.za/tenders.json` | Source to ingest: the machine-readable feed (default), an HTML listing, or `file:<path>` offline. Selects the connector. |
+| `CIDB_LISTING_URL` | worker | `https://www.cidb.org.za/cidb-tenders/current-tenders/` | Public page records are attributed to (the `sourceUrl` field in API responses). |
 | `CIDB_SYNC_CRON` | worker | `*/30 * * * *` | Sync schedule (cron expression). |
 | `SYNC_ON_START` | worker | `true` | Run one sync immediately on boot. |
 | `API_SYNC_ON_START` | api | `false` | Run one sync when the API boots (dev convenience, usually with `DB_MODE=memory`). |
@@ -331,9 +351,18 @@ curl -H "X-API-Key: $ADMIN_API_KEY" "$BASE/api/v1/admin/sync/<syncId>"
   `BRIEFING_NOTE`, `PRICING_SCHEDULE`, `OTHER`) with file name + MIME type. V1 stores
   metadata/links (no PDF download); the model already carries `downloadStatus`,
   `contentHash`, `fileSize` for the future pipeline.
-- **Status:** the current-tenders listing implies `OPEN`; known closing dates refine to
-  `CLOSING_SOON`/`CLOSED`. The API additionally re-derives display status at read time so
-  a passed closing date is never reported as open. Terminal states are never invented.
+- **Status:** the feed declares each record's `realstatus` (`Open`/`Closed`/`Awarded`),
+  which is mapped onto the schema (`OPEN`/`CLOSED`/`AWARDED`/`CANCELLED`) and preserved in
+  `rawData.sourceStatusRaw`. Known closing dates refine `OPEN` to `CLOSING_SOON`/`CLOSED`.
+  The API additionally re-derives display status at read time so a passed closing date is
+  never reported as open. Terminal states are never invented — and when the source
+  declares one, it wins over inference (the feed publishes no closing dates, so inference
+  alone would call every awarded tender `OPEN`).
+- **Documents from the feed:** advert → `GET BID DOCUMENT` (`BID_DOCUMENT`), specification →
+  `GET ADDENDUM` (`ADDENDUM`), awards → `BID OPENING REGISTER` (`OPENING_REGISTER`),
+  briefing → `BRIEFING NOTE` (`BRIEFING_NOTE`) — the exact labels the website renders.
+  Anchors embedded in a description (pricing schedules, BOQs) are extracted as documents
+  too, and the description is stored as clean text.
 - **Removed tenders:** tenders absent from the source longer than
   `MISSING_CLOSE_GRACE_DAYS` are marked `CLOSED` (only on successful syncs).
 - **Failure safety:** HTTP errors, retries with exponential backoff, and structural
@@ -344,6 +373,35 @@ curl -H "X-API-Key: $ADMIN_API_KEY" "$BASE/api/v1/admin/sync/<syncId>"
 **Best-effort inference** (province from city mentions, grade/class/closing-date/contact
 extraction) is flagged in `rawData.inferred`; raw values are always preserved
 (`cidbGradeRaw`, `cidbClassRaw`, `rawData`, `sourceUrl`).
+
+### Bulk export (dataset snapshots)
+
+`scripts/ingest-export.ts` runs the real pipeline end to end and writes a normalized
+dataset instead of touching a database — useful for one-off extractions, source
+verification and CI artifacts:
+
+```bash
+# live feed (default) → data/cidb-tenders-<date>.json|.csv + ingest-summary.json
+npx tsx scripts/ingest-export.ts
+
+# replay a captured snapshot offline; keep the raw payload alongside the dataset
+npx tsx scripts/ingest-export.ts --url=file:./snapshots/<stamp>/source-html/tenders.json --raw=none
+
+# crawl a server-rendered HTML listing instead (paginates up to --max-pages)
+npx tsx scripts/ingest-export.ts --url=https://www.cidb.org.za/cidb-tenders/current-tenders/
+```
+
+Every record keeps `sourceUrl` pointing at the public listing page
+(`CIDB_LISTING_URL`), with the feed URL retained in `rawData.sourceExtra.feedUrl`.
+
+The GitHub Actions workflow **Ingest CIDB tenders** (`.github/workflows/ingest.yml`)
+runs this from a GitHub runner — which can reach `cidb.org.za` from environments that
+cannot — on every push touching `src/cidb/**`, `scripts/ingest-export.ts` or the
+workflow itself, and can also be started manually (Actions → Run workflow). Each run
+publishes `data/` plus the raw source payload as artifacts and commits a timestamped
+copy under `snapshots/` to the branch, so results stay inspectable without downloading
+artifact storage. With the `DATABASE_URL` repository secret set, `target=database` (or
+`both`) additionally migrates and syncs into the live database.
 
 ---
 
@@ -426,12 +484,13 @@ Always attribute the source (`source`, `sourceUrl`) — TenderBase is not the pu
 
 ## Testing & verification
 
-- `npm test` — 144 tests: parser/normalizer/dates/grades/classes/hashing/retry/query/config
-  units; migration DDL executed on real PostgreSQL (PGlite); sync pipeline
-  (idempotency, change detection, duplicates, partial failure, suspicious guards,
-  missing-as-closed, overlap/orphan handling); full API suite (auth, validation,
-  filters, pagination, serialization, admin lifecycle); OpenAPI contract suite
-  (valid 3.0 document, summaries/tags/operationIds, real response descriptions,
+- `npm test` — 177 tests: feed mapper (statuses, documents, description HTML, probing),
+  parser/normalizer/dates/grades/classes/hashing/retry/query/config units; migration DDL
+  executed on real PostgreSQL (PGlite); sync pipeline (idempotency, change detection,
+  duplicates, partial failure, suspicious guards, missing-as-closed, overlap/orphan
+  handling) including an end-to-end run over a captured live feed snapshot; full API suite
+  (auth, validation, filters, pagination, serialization, admin lifecycle); OpenAPI contract
+  suite (valid 3.0 document, summaries/tags/operationIds, real response descriptions,
   documented 401/403/404/409/429, `/docs`, `/docs/json`, `/docs/yaml`).
 - `npm run test:cidb-live` — optional manual probe of the live CIDB site.
 - `npm run verify:db` — run once against Neon to smoke-test every query path.
@@ -459,7 +518,8 @@ fully standard while allowing the whole suite to run anywhere.
 | `/docs` loads but *Try it out* returns 401 | Click **Authorize** and paste the key — the docs UI never reads secrets from the environment. |
 | `/docs` slow or 503 on first hit | Render free plan sleeps after ~15 min idle; the first request wakes the service (~30-60 s). |
 | Sync `FAILED` + `SOURCE_REQUEST_FAILED` | CIDB unreachable/blocked; check `CIDB_SOURCE_URL`, timeouts, retry settings. It retries with backoff automatically. |
-| Sync `FAILED` + `SOURCE_STRUCTURE_CHANGED` | CIDB redesigned the listing; run `npm run test:cidb-live`, update `src/cidb/parser.ts` + fixtures. |
+| Sync `FAILED` + `SOURCE_STRUCTURE_CHANGED` | CIDB changed the source; run `npm run test:cidb-live`, then update `src/cidb/jsonFeed.ts` (feed) or `src/cidb/parser.ts` (HTML) + fixtures. |
+| Sync discovers **0 records** from the listing page | Expected: `/cidb-tenders/current-tenders/` renders its rows in the browser, so the served HTML has an empty `<tbody>`. Ingest the feed instead — `CIDB_SOURCE_URL=https://www.cidb.org.za/tenders.json` (the default). |
 | Sync `FAILED` + `SUSPICIOUS_*` | Scrape collapsed vs history; data untouched by design. Investigate source, then re-run. |
 | `409 SYNC_ALREADY_RUNNING` | A sync is in flight; poll `GET /admin/sync/history` instead. |
 | Prisma `P1001`/`P1000` on Render | Wrong `DATABASE_URL` or Neon sleeping/firewalled; verify with `verify:db`. |
